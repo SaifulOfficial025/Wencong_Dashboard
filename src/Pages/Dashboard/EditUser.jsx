@@ -14,8 +14,8 @@ function EditUser() {
   return (
      <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="">
-          <Link to={"/settings/users/"} className="flex justify-left mb-2">
+        <div className="dark:text-black">
+          <Link to={"/dashboard/settings/users/"} className="flex justify-left mb-2">
             <ChevronLeft size={16} />
             <span className="text-sm">Back to User</span>
           </Link>

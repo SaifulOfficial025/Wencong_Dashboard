@@ -75,7 +75,7 @@ function Promotion() {
       {/* Table Section */}
       <div className="mt-6 bg-white rounded-lg shadow overflow-x-auto">
         <div className="flex justify-end px-4 py-2">
-          <Link to="/add_promotion">
+          <Link to="/dashboard/master_data/sales_agent_group/add_promotion">
           <button className="bg-[#F24E1E] text-white px-4 py-2 rounded text-sm flex items-center">
             Add new
           </button>
@@ -97,30 +97,31 @@ function Promotion() {
                 <td className="px-4 py-2">{item.promotionName}</td>
                 <td className="px-4 py-2">{item.status}</td>
                 <td className="px-4 py-2">{item.promotionPeriod}</td>
-                <td className="px-4 py-2 text-blue-500 underline cursor-pointer"> <Link to="/edit_promotion_details">View</Link></td>
+                <td className="px-4 py-2 text-blue-500 underline cursor-pointer"> <Link to="/dashboard/master_data/sales_agent_group/edit_promotion_details">View</Link></td>
               </tr>
             ))}
           </tbody>
         </table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <select className="border rounded p-1 text-gray-700">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>100</option>
-            </select>
-          </div>
-          <div className="text-gray-700">
-            Page 1 of 1 (10 items)
-          </div>
-          <div className="flex">
-            <button className="px-2 py-1 border rounded text-gray-700 hover:bg-gray-100">&#8249;</button>
-            <button className="px-2 py-1 border rounded ml-1 text-gray-700 hover:bg-gray-100">&#8250;</button>
-          </div>
-        </div>
+       <div className="flex items-center justify-between px-4 py-3 text-sm bg-white dark:bg-white">
+    <div className="flex items-center gap-2">
+        <select className="border rounded p-1 text-gray-700 dark:text-gray-700 dark:bg-white dark:border-gray-200">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+            <option>100</option>
+        </select>
+        <span className="text-gray-700 dark:text-gray-700">items</span>
+    </div>
+    <div className="text-gray-700 dark:text-gray-700">
+        Page 1 of 1 (10 items)
+    </div>
+    <div className="flex">
+        <button className="px-2 py-1 border rounded text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8249;</button>
+        <button className="px-2 py-1 border rounded ml-1 text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8250;</button>
+    </div>
+</div>
       </div>
     </div>
   );

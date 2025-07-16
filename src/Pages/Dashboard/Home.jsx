@@ -27,7 +27,7 @@ import Graph from "./LinkedItems/Graph";
 //       {/* Dashboard Summary */}
 //       <div className="bg-white shadow-md rounded-[10px] p-8">
 //         <h1 className="text-[#F04E24] mb-10">Order Dashboard</h1>
-//         <div className="grid grid-cols-6 gap-10">
+//         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 lg:gap-10">
 //           {dashboardData.map((dashboard_info, index) => (
 //             <div
 //               key={dashboard_info.id}
@@ -45,7 +45,7 @@ import Graph from "./LinkedItems/Graph";
 //       </div>
 
 //       {/* Sales and Overdue Tables */}
-//       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
 //         {/* Sales By Company */}
 //         <div className="bg-[#ffff] shadow-md rounded-[15px] p-6">
 //           <h2 className="text-[#F04E24] text-lg font-semibold mb-4">Sales By Company</h2>
@@ -124,24 +124,28 @@ const Home = () => {
   return (
     <div className="space-y-10">
       {/* Dashboard Summary */}
-      <div className="bg-white shadow-md rounded-[10px] p-8">
-        <h1 className="text-[#F04E24] mb-10">Order Dashboard</h1>
-        <div className="grid grid-cols-6 gap-10">
-          {dashboardData.map((dashboard_info, index) => (
-            <div
-              key={dashboard_info.id}
-              className={`${
-                index !== dashboardData.length - 1 ? "border-r-2" : ""
-              } border-[#F04E24] pr-4`}
-            >
-              <h1 className="text-[14px] text-black">{dashboard_info.title}</h1>
-              <p className="text-[#F04E24] text-[32px] font-bold">
-                {dashboard_info.amount}
-              </p>
-            </div>
-          ))}
-        </div>
+      <div className="bg-white shadow-md rounded-[10px] p-4 sm:p-6 md:p-8">
+  <h1 className="text-[#F04E24] mb-6 sm:mb-8 md:mb-10 text-xl sm:text-2xl font-semibold">
+    Order Dashboard
+  </h1>
+
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8 lg:gap-10">
+    {dashboardData.map((dashboard_info, index) => (
+      <div
+        key={dashboard_info.id}
+        className={`flex flex-col border-r border-[#F04E24] pr-2 sm:pr-3 md:pr-4 last:border-r-0`}
+      >
+        <h1 className="text-[12px] sm:text-[14px] text-black">
+          {dashboard_info.title}
+        </h1>
+        <p className="text-[#F04E24] text-[18px] sm:text-[22px] md:text-[26px] lg:text-[32px] font-bold">
+          {dashboard_info.amount}
+        </p>
       </div>
+    ))}
+  </div>
+</div>
+
 
       {/* graph */}
 
@@ -149,48 +153,59 @@ const Home = () => {
 
       {/* Sales and Overdue Boxes with Gaps */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Sales By Company */}
-        <div className="bg-white shadow-md rounded-[15px] p-6">
-          <h2 className="text-[#F04E24] text-lg font-semibold mb-4">Sales By Company</h2>
-          {/* Headers */}
-          <div className="grid grid-cols-3 font-semibold mb-3 px-2 text-sm">
-            <div>Company Name</div>
-            <div>Total Sales Item</div>
-            <div>Total Sales</div>
-          </div>
-          {/* Rows with gap */}
-          <div className="flex flex-col gap-3">
-            {salesByCompany.map((item) => (
-              <div key={item.id} className="grid grid-cols-3 bg-[#FFDADA]  px-2 py-2 text-sm">
-                <div>{`${item.id}. ${item.name}`}</div>
-                <div>{item.items}</div>
-                <div>{item.total}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+  {/* Sales By Company */}
+  <div className="bg-white dark:bg-white shadow-md rounded-[15px] p-6">
+    <h2 className="text-[#F04E24] text-lg font-semibold mb-4">Sales By Company</h2>
 
-        {/* Top Overdue Company */}
-        <div className="bg-white shadow-md rounded-[15px] p-6">
-          <h2 className="text-[#F04E24] text-lg font-semibold mb-4">Top Overdue Company</h2>
-          {/* Headers */}
-          <div className="grid grid-cols-3 font-semibold mb-3 px-2 text-sm">
-            <div>Company Name</div>
-            <div>Overdue</div>
-            <div>Overdue Amount</div>
-          </div>
-          {/* Rows with gap */}
-          <div className="flex flex-col gap-3">
-            {topOverdueCompany.map((item) => (
-              <div key={item.id} className="grid grid-cols-3 bg-[#FFDADA] px-2 py-2 text-sm">
-                <div>{`${item.id}. ${item.name}`}</div>
-                <div>{item.overdue}</div>
-                <div>{item.amount}</div>
-              </div>
-            ))}
-          </div>
+    {/* Headers */}
+    <div className="grid grid-cols-3 font-semibold mb-3 px-2 text-xs sm:text-sm text-black dark:text-black">
+      <div>Company Name</div>
+      <div>Total Sales Item</div>
+      <div>Total Sales</div>
+    </div>
+
+    {/* Rows */}
+    <div className="flex flex-col gap-3">
+      {salesByCompany.map((item) => (
+        <div
+          key={item.id}
+          className="grid grid-cols-3 bg-[#FFDADA] dark:bg-[#FFDADA] text-black dark:text-black px-2 py-2 text-xs sm:text-sm"
+        >
+          <div>{`${item.id}. ${item.name}`}</div>
+          <div>{item.items}</div>
+          <div>{item.total}</div>
         </div>
-      </div>
+      ))}
+    </div>
+  </div>
+
+  {/* Top Overdue Company */}
+  <div className="bg-white dark:bg-white shadow-md rounded-[15px] p-6">
+    <h2 className="text-[#F04E24] text-lg font-semibold mb-4">Top Overdue Company</h2>
+
+    {/* Headers */}
+    <div className="grid grid-cols-3 font-semibold mb-3 px-2 text-xs sm:text-sm text-black dark:text-black">
+      <div>Company Name</div>
+      <div>Overdue</div>
+      <div>Overdue Amount</div>
+    </div>
+
+    {/* Rows */}
+    <div className="flex flex-col gap-3">
+      {topOverdueCompany.map((item) => (
+        <div
+          key={item.id}
+          className="grid grid-cols-3 bg-[#FFDADA] dark:bg-[#FFDADA] text-black dark:text-black px-2 py-2 text-xs sm:text-sm"
+        >
+          <div>{`${item.id}. ${item.name}`}</div>
+          <div>{item.overdue}</div>
+          <div>{item.amount}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };

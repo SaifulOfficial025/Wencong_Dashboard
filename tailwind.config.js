@@ -6,7 +6,15 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: "#F04E24",
+        "primary-foreground": "#fff"
+      },
+      fontFamily: {
+        "space-grotesk": ['Space Grotesk', "sans-serif"],
+      }
+    },
   },
   plugins: [
     require('daisyui'),

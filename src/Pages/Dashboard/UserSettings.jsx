@@ -33,7 +33,7 @@ function UserSettings() {
             {/* Table Section */}
             <div className="bg-white rounded shadow overflow-x-auto">
                 <div className="flex justify-end px-4 py-2">
-                    <Link to="/add_new_user">
+                    <Link to="/dashboard/settings/users/add_new_user">
                         <button className="flex items-center justify-center bg-[#ffe4df] text-[#f04e24] border border-[#f04e24] px-4 py-2 rounded text-sm">
                             + Add New User
                         </button>
@@ -63,7 +63,7 @@ function UserSettings() {
                                 <td className="px-4 py-2">+60123-1234567</td>
                                 <td className="px-4 py-2">Admin</td>
                                 <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                                    <Link to="/edit_user">
+                                    <Link to="/dashboard/settings/users/edit_user">
                                         View
                                     </Link>
                                 </td>
@@ -73,21 +73,23 @@ function UserSettings() {
                 </table>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 text-sm">
-                    <div>
-                        <select className="border rounded p-1">
-                            <option>10</option>
-                            <option>25</option>
-                            <option>50</option>
-                            <option>100</option>
-                        </select>
-                    </div>
-                    <div>Page 1 of 1 (10 items)</div>
-                    <div>
-                        <button className="px-2">&#8249;</button>
-                        <button className="px-2">&#8250;</button>
-                    </div>
-                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-3 text-xs sm:text-sm bg-white dark:bg-white text-gray-700 dark:text-gray-700 space-y-2 sm:space-y-0">
+    <div>
+        <select className="border rounded p-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-200">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+            <option>100</option>
+        </select>
+    </div>
+    <div>
+        <span className="dark:text-gray-700">Page 1 of 1 (10 items)</span>
+    </div>
+    <div>
+        <button className="px-2 border rounded bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8249;</button>
+        <button className="px-2 border rounded ml-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8250;</button>
+    </div>
+</div>
             </div>
         </div>
     );

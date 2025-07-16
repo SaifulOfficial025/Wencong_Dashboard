@@ -29,7 +29,7 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <div
@@ -41,23 +41,23 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white">
-        <div className="w-full max-w-lg space-y-6">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 bg-white">
+        <div className="w-full max-w-lg space-y-4 sm:space-y-6">
           <div className="text-center">
             <div className="rounded-full flex items-center justify-center mx-auto mb-4">
               <img src={wencong_logo} alt="" />
             </div>
-            <h2 className="text-3xl font-bold text-[#DE472D] text-[24px]">Sign In</h2>
-            <p className="text-[#35465B]  text-[20px] capitalize mt-3">Welcome back</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#DE472D]">Sign In</h2>
+            <p className="text-[#35465B] text-base sm:text-xl md:text-[20px] capitalize mt-2 sm:mt-3">Welcome back</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="">
     
-            <div className="mb-16">
-              <label className="block text-[#F04E24] text-[18px] font-medium mb-1">Email Address</label>
+            <div className="mb-8 sm:mb-12 md:mb-16">
+              <label className="block text-[#F04E24] text-base sm:text-lg md:text-[18px] font-medium mb-1">Email Address</label>
               <input
                 type="email"
-                className={`input input-bordered h-[61px] rounded-[18px] ps-5 w-full bg-[#FFE4DF] border-none text-[16px] text-[#797D8C] font-medium ${
+                className={`input input-bordered h-[50px] sm:h-[55px] md:h-[61px] rounded-[12px] sm:rounded-[18px] ps-3 sm:ps-5 w-full bg-[#FFE4DF] border-none text-sm sm:text-base md:text-[16px] text-[#797D8C] font-medium ${
                   errors.email ? "input-error" : ""
                 }`}
                 placeholder="you@example.com"
@@ -77,7 +77,7 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="text-[#F04E24] text-[18px] font-medium ">Password</label>
+                <label className="text-[#F04E24] text-base sm:text-lg md:text-[18px] font-medium">Password</label>
                 <button
                   type="button"
                   className="text-sm italic hover:underline text-[#516F90]"
@@ -89,7 +89,7 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`input input-bordered h-[61px] rounded-[18px] ps-5 text-[16px] text-[#797D8C] font-medium w-full bg-red-50 border-red-200 focus:border-orange-500 pr-10 ${
+                  className={`input input-bordered h-[50px] sm:h-[55px] md:h-[61px] rounded-[12px] sm:rounded-[18px] ps-3 sm:ps-5 text-sm sm:text-base md:text-[16px] text-[#797D8C] font-medium w-full bg-red-50 border-red-200 focus:border-orange-500 pr-10 ${
                     errors.password ? "input-error" : ""
                   }`}
                   placeholder="••••••••"
@@ -124,7 +124,7 @@ export default function LoginPage() {
              <button
               type="submit"
             
-              className="h-[58px] w-[252px] bg-[#F04E24] text-[20px] hover:bg-orange-600 rounded-[18px] text-white text-lg font-medium"
+              className="h-[45px] sm:h-[50px] md:h-[58px] w-full sm:w-[200px] md:w-[252px] bg-[#F04E24] text-base sm:text-lg md:text-[20px] hover:bg-orange-600 rounded-[12px] sm:rounded-[18px] text-white font-medium"
             >
               {isLoading ? (
                 <>

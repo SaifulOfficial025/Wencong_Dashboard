@@ -23,7 +23,7 @@ function SalesAgentGroup() {
       <div className="max-w-full mx-auto">
         {/* Add New Button */}
         <div className="flex justify-end mb-4">
-          <Link to="/add_new_sales_agent_group">
+          <Link to="/dashboard/master_data/sales_agent_group/add_new_sales_agent_group">
                         <button className="flex items-center justify-center bg-[#ffe4df] text-[#f04e24] border border-[#f04e24] px-4 py-2 rounded text-sm">
                             + Add New Sales Agent Group
                         </button>

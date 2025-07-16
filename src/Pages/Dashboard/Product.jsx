@@ -92,7 +92,7 @@ function Product() {
                 <td className="px-4 py-2">{item.category}</td>
                 <td className="px-4 py-2">{item.defaultPrice}</td>
                 <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                  <Link to="/edit_product_details">View</Link>
+                  <Link to="/dashboard/master_data/product/edit_product_details/">View</Link>
                 </td>
               </tr>
             ))}
@@ -100,24 +100,24 @@ function Product() {
         </table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <select className="border rounded p-1 text-gray-700">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>100</option>
-            </select>
-            <span>items</span>
-          </div>
-          <div className="text-gray-700">
-            Page 1 of 1 (10 items) {/* Placeholder, can be dynamic */}
-          </div>
-          <div className="flex">
-            <button className="px-2 py-1 border rounded text-gray-700 hover:bg-gray-100">&#8249;</button>
-            <button className="px-2 py-1 border rounded ml-1 text-gray-700 hover:bg-gray-100">&#8250;</button>
-          </div>
-        </div>
+        <div className="flex items-center justify-between px-4 py-3 text-sm dark:bg-white"> {/* Add dark:bg-white if the parent background can change */}
+    <div className="flex items-center gap-2">
+        <select className="border rounded p-1 text-gray-700 dark:text-gray-700 dark:bg-white dark:border-gray-200">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+            <option>100</option>
+        </select>
+        <span className="dark:text-gray-700">items</span> {/* Ensure "items" text color is consistent */}
+    </div>
+    <div className="text-gray-700 dark:text-gray-700">
+        Page 1 of 1 (10 items) {/* Placeholder, can be dynamic */}
+    </div>
+    <div className="flex">
+        <button className="px-2 py-1 border rounded text-gray-700 dark:text-gray-700 dark:border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-100">&#8249;</button>
+        <button className="px-2 py-1 border rounded ml-1 text-gray-700 dark:text-gray-700 dark:border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-100">&#8250;</button>
+    </div>
+</div>
       </div>
     </div>
   );

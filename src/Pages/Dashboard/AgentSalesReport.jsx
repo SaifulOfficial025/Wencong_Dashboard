@@ -7,53 +7,72 @@ function AgentSalesReport() {
   const onSubmit = (data) => console.log(data);
 
   return (
-    <div className="p-6 bg-[#FFF3F0] min-h-screen">
+    <div className="p-3 sm:p-4 md:p-6 bg-[#FFF3F0] min-h-screen">
       {/* Filter Options */}
-      <div className="bg-white p-4 rounded shadow">
-        <h2 className="text-[#F24E1E] font-semibold mb-4">Filter Options</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Date Range */}
-          <div className="col-span-1">
-            <label className="text-sm font-medium text-gray-700 mb-1 block">Date Range</label>
-            <div className="flex items-center space-x-2">
-              <input type="date" {...register('startDate')} className="w-full p-2 border rounded bg-[#FDE5E0]" />
-              <span className="text-[#F24E1E]">to</span>
-              <input type="date" {...register('endDate')} className="w-full p-2 border rounded bg-[#FDE5E0]" />
+      <div className="bg-white dark:bg-white p-3 sm:p-4 rounded shadow">
+    <h2 className="text-[#F24E1E] dark:text-[#F24E1E] font-semibold mb-4">Filter Options</h2>
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {/* Date Range */}
+        <div className="col-span-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-700 mb-1 block">Date Range</label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                <input
+                    type="date"
+                    {...register('startDate')}
+                    className="w-full p-2 border rounded bg-[#FDE5E0] dark:bg-[#FDE5E0] dark:text-black"
+                />
+                <span className="text-[#F24E1E] dark:text-[#F24E1E]">to</span>
+                <input
+                    type="date"
+                    {...register('endDate')}
+                    className="w-full p-2 border rounded bg-[#FDE5E0] dark:bg-[#FDE5E0] dark:text-black"
+                />
             </div>
-          </div>
+        </div>
 
-          {/* Sales Agent */}
-          <div className="col-span-1 mt-0.5">
-            <label className="text-sm font-medium text-gray-700 mb-1 block">Sales Agent</label>
-            <select {...register('salesAgent')} className="w-full p-2 border rounded bg-[#FDE5E0]">
-              <option value="">Select Agent</option>
-              <option value="Company ABC">Company ABC</option>
+        {/* Sales Agent */}
+        <div className="col-span-1 mt-4 sm:mt-0.5"> {/* Added mt-4 for a gap on smaller screens, kept sm:mt-0.5 for larger */}
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-700 mb-1 block">Sales Agent</label>
+            <select
+                {...register('salesAgent')}
+                className="w-full p-2 border rounded bg-[#FDE5E0] dark:bg-[#FDE5E0] dark:text-black"
+            >
+                <option value="">Select Agent</option>
+                <option value="Company ABC">Company ABC</option>
             </select>
-          </div>
+        </div>
 
-          {/* Agent Code */}
-          <div className="col-span-1 mt-0.5">
-            <label className="text-sm font-medium text-gray-700 mb-1 block">Agent Code</label>
-            <select {...register('agentCode')} className="w-full p-2 border rounded bg-[#FDE5E0]">
-              <option value="">Select Code</option>
-              <option value="400-001">400-001</option>
+        {/* Agent Code */}
+        <div className="col-span-1 mt-0.5">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-700 mb-1 block">Agent Code</label>
+            <select
+                {...register('agentCode')}
+                className="w-full p-2 border rounded bg-[#FDE5E0] dark:bg-[#FDE5E0] dark:text-black"
+            >
+                <option value="">Select Code</option>
+                <option value="400-001">400-001</option>
             </select>
-          </div>
+        </div>
 
-          {/* Search Button */}
-          <div className="col-span-1 flex items-center mt-5">
-            <button type="submit" className="bg-[#F24E1E] text-white px-4 py-2 rounded w-full">Search</button>
-          </div>
-        </form>
-      </div>
-
+        {/* Search Button */}
+        <div className="col-span-1 flex items-center mt-5">
+            <button
+                type="submit"
+                className="bg-[#F24E1E] dark:bg-[#F24E1E] text-white dark:text-white px-4 py-2 rounded w-full hover:bg-orange-600 dark:hover:bg-orange-600"
+            >
+                Search
+            </button>
+        </div>
+    </form>
+</div>
       {/* Table Section */}
-      <div className="mt-6 bg-white rounded shadow overflow-x-auto">
-        <div className="flex justify-end px-4 py-2">
+      <div className="mt-4 sm:mt-6 bg-white rounded shadow overflow-x-auto">
+        <div className="flex justify-end px-3 sm:px-4 py-2">
           <button className="flex items-center justify-center bg-[#ffe4df] text-[#f04e24] border border-[#f04e24] px-4 py-2 rounded text-sm">Export <TiExport /></button>
 
         </div>
-        <table className="w-full text-left border-t">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-t min-w-[600px]">
           <thead className="bg-[#F24E1E] text-white">
             <tr>
               <th className="px-4 py-2">Doc.No</th>
@@ -77,25 +96,26 @@ function AgentSalesReport() {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 text-sm">
-          <div>
-            <select className="border rounded p-1">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>100</option>
-            </select>
-          </div>
-          <div>
-            Page 1 of 1 (10 items)
-          </div>
-          <div>
-            <button className="px-2">&#8249;</button>
-            <button className="px-2">&#8250;</button>
-          </div>
-        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-3 text-xs sm:text-sm bg-white dark:bg-white text-gray-700 dark:text-gray-700 space-y-2 sm:space-y-0">
+    <div>
+        <select className="border rounded p-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-200">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+            <option>100</option>
+        </select>
+    </div>
+    <div>
+        <span className="dark:text-gray-700">Page 1 of 1 (10 items)</span>
+    </div>
+    <div>
+        <button className="px-2 border rounded bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8249;</button>
+        <button className="px-2 border rounded ml-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">&#8250;</button>
+    </div>
+</div>
       </div>
     </div>
   );

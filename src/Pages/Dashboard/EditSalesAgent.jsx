@@ -15,7 +15,7 @@ function EditSalesAgent() {
     <div className="p-4 font-sans max-w-full mx-auto">
       {/* Header */}
       <div className="mb-4">
-        <Link to={"/master_data/sales_agent"} className="flex items-center text-sm text-gray-700 mb-2">
+        <Link to={"/dashboard/master_data/sales_agent"} className="flex items-center text-sm text-gray-700 mb-2">
           <ChevronLeft size={16} className="mr-1" />
           <span>Back to Sales Agent</span>
         </Link>
