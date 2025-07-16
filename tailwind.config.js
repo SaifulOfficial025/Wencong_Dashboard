@@ -15,7 +15,7 @@ export default {
         "space-grotesk": ['Space Grotesk', "sans-serif"],
       },
       backgroundImage: {
-        'hero-bg': "url('./public/login_side.png')",
+        'hero-bg': "url('../public/login_side.png')",
       },
     },
   },
