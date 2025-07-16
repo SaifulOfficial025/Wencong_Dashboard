@@ -7,6 +7,7 @@ const topSalesData = [
   { name: "10138 SHOOT CAKE WOLF 12,468 Ctn", value: 12468, color: "#F24E1E" },
   { name: "10138 SHOOT CAKE WOLF 8,468 Ctn", value: 8468, color: "#F57E62" },
   { name: "10138 SHOOT CAKE WOLF 7,468 Ctn", value: 7468, color: "#FBBBA7" },
+  
 ];
 
 function StockRemainReport() {
