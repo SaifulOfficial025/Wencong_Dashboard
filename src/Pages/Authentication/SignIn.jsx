@@ -33,8 +33,8 @@ export default function LoginPage() {
       {/* Left Side Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <div
-          className="w-full h-full bg-cover bg-center"
-          style={{ backgroundImage: "url('../../../public/login_side.png')" }}
+          className="w-full h-full bg-cover bg-center bg-hero-bg"
+          // style={{ backgroundImage: "url('../../../public/login_side.png')" }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-red-500/30" />
         </div>

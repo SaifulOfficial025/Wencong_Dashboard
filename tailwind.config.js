@@ -13,7 +13,10 @@ export default {
       },
       fontFamily: {
         "space-grotesk": ['Space Grotesk', "sans-serif"],
-      }
+      },
+      backgroundImage: {
+        'hero-bg': "url('./public/login_side.png')",
+      },
     },
   },
   plugins: [
