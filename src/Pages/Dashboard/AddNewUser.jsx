@@ -4,7 +4,11 @@ import { ChevronLeft, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function AddNewUser() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   const onSubmit = (data) => {
     console.log(data);
@@ -111,7 +115,10 @@ function AddNewUser() {
                     <option value="user">User</option>
                     <option value="manager">Manager</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
                 </div>
               </div>
             </div>
@@ -139,7 +146,10 @@ function AddNewUser() {
                     <option value="level2">Level 2</option>
                     <option value="level3">Level 3</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
                 </div>
               </div>
               <div>
@@ -156,7 +166,10 @@ function AddNewUser() {
                     <option value="write">Write</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
                 </div>
               </div>
             </div>
@@ -176,7 +189,10 @@ function AddNewUser() {
                     <option value="inactive">Inactive</option>
                     <option value="pending">Pending</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
                 </div>
               </div>
             </div>
@@ -195,6 +211,6 @@ function AddNewUser() {
       </div>
     </div>
   );
-};
+}
 
 export default AddNewUser;

@@ -4,12 +4,16 @@ import { ChevronLeft, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function AddNewSalesAgentGroup() {
-    const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-    const onSubmit = (data) => {
-        console.log(data);
-    };
-    
+  const onSubmit = (data) => {
+    console.log(data);
+  };
+
   return (
     <div className="max-w-full mx-auto">
       {/* Header */}
@@ -32,7 +36,9 @@ function AddNewSalesAgentGroup() {
       <div className="bg-white rounded-b-lg shadow-sm">
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 text-black">
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-700 mb-4">Agent Group Detail</h2>
+            <h2 className="text-lg font-medium text-gray-700 mb-4">
+              Agent Group Detail
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Group Name */}
               <div>
@@ -61,7 +67,10 @@ function AddNewSalesAgentGroup() {
                     <option value="inactive">Inactive</option>
                     <option value="pending">Pending</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
                 </div>
               </div>
             </div>
@@ -82,4 +91,4 @@ function AddNewSalesAgentGroup() {
   );
 }
 
-export default AddNewSalesAgentGroup
+export default AddNewSalesAgentGroup;

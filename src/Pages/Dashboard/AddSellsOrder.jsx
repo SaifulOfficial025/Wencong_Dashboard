@@ -14,13 +14,7 @@ const AddSellsOrder = () => {
     total: 0,
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-  } = useForm({
+  const { register, control, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       salesOrderNo: "SO-000032",
       date: "",
@@ -119,7 +113,10 @@ const AddSellsOrder = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 font-medium cursor-pointer text-white dark:text-white">
-                    <MdPrint size={24} className="bg-[#F04E24] dark:bg-[#F04E24]" />
+                    <MdPrint
+                      size={24}
+                      className="bg-[#F04E24] dark:bg-[#F04E24]"
+                    />
                     Print
                   </div>
                 </div>
@@ -302,8 +299,12 @@ const AddSellsOrder = () => {
                   <thead className="bg-[#F04E24] dark:bg-[#F04E24] text-white dark:text-white">
                     <tr>
                       <th className="text-white dark:text-white">No</th>
-                      <th className="text-white dark:text-white">Product Code</th>
-                      <th className="text-white dark:text-white">Description</th>
+                      <th className="text-white dark:text-white">
+                        Product Code
+                      </th>
+                      <th className="text-white dark:text-white">
+                        Description
+                      </th>
                       <th className="text-white dark:text-white">Qty</th>
                       <th className="text-white dark:text-white">UOM</th>
                       <th className="text-white dark:text-white">Unit Price</th>
@@ -341,7 +342,8 @@ const AddSellsOrder = () => {
                             className="input input-bordered input-sm w-full bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-300 placeholder-gray-500 dark:placeholder-gray-500"
                             placeholder="Qty"
                             onChange={(e) => {
-                              const qty = Number.parseFloat(e.target.value) || 0;
+                              const qty =
+                                Number.parseFloat(e.target.value) || 0;
                               const unitPrice =
                                 Number.parseFloat(
                                   watch(`items.${index}.unitPrice`)
@@ -372,7 +374,8 @@ const AddSellsOrder = () => {
                             className="input input-bordered input-sm w-full bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-300 placeholder-gray-500 dark:placeholder-gray-500"
                             placeholder="Unit Price"
                             onChange={(e) => {
-                              const unitPrice = Number.parseFloat(e.target.value) || 0;
+                              const unitPrice =
+                                Number.parseFloat(e.target.value) || 0;
                               const qty =
                                 Number.parseFloat(
                                   watch(`items.${index}.qty`)
@@ -438,15 +441,21 @@ const AddSellsOrder = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Subtotal</span>
-                  <span className="font-semibold">${totals.subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    ${totals.subtotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Promotion</span>
-                  <span className="font-semibold">-${totals.promotion.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    -${totals.promotion.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">GST (6%)</span>
-                  <span className="font-semibold">${totals.gst.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    ${totals.gst.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total</span>

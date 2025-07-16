@@ -7,6 +7,7 @@ import wencong_logo from "../../../public/huntrerboom_logo.png";
 // import AgentSalesReport from "..Dashboard/AgentSalesReport";
 import { CiSettings } from "react-icons/ci";
 import { BsDatabaseCheck } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
