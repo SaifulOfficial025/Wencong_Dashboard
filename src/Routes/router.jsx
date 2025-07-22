@@ -33,6 +33,11 @@ import AddPromotion from "../Pages/Dashboard/AddPromotion";
 import EditPromotionalDetails from "../Pages/Dashboard/EditPromotionalDetails";
 import Signin from "../Pages/Authentication/SignIn";
 import AddSellsOrder from "../Pages/Dashboard/AddSellsOrder";
+import ApprovalSalesOrder from "../Pages/Dashboard/ApprovalSalesOrder";
+import UpdateShipment from "../Pages/Dashboard/UpdateShipment";
+import CancelOrder from "../Pages/Dashboard/CancelOrder";
+import CompletedOrder from "../Pages/Dashboard/CompletedOrder";
+import ReturnItem from "../Pages/Dashboard/ReturnItem";
 
 // import AgentSalesReport from "../Pages/Dashboard/AgentSalesReport";
 
@@ -61,6 +66,11 @@ export const router = createBrowserRouter([
         path: "sales_order",
         element: <SalesOrder />,
       },
+          { path: "/dashboard/sales_order/approval_sales_order", element: <ApprovalSalesOrder /> },
+          { path: "/dashboard/sales_order/update_shipment", element: <UpdateShipment /> },
+          { path: "/dashboard/sales_order/cancel_order", element: <CancelOrder /> },
+          { path: "/dashboard/sales_order/completed_order", element: <CompletedOrder /> },
+          { path: "/dashboard/sales_order/return_item", element: <ReturnItem /> },
       {
         path: "booking_info",
         element: <Bookings />,

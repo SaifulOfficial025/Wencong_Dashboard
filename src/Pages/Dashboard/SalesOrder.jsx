@@ -2,6 +2,7 @@ import { useState } from "react";
 import home_icon from "../../../public/icon_home.png";
 import { BsThreeDots } from "react-icons/bs";
 import { Link } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 export default function OrderTable() {
   const [activeTab, setActiveTab] = useState("All");
@@ -308,7 +309,19 @@ export default function OrderTable() {
                       >
                         <li>
                           <Link
-                            to={`/product/${order?.id}`}
+                            to={
+                              order.status === "Pending"
+                                ? "/dashboard/sales_order/approval_sales_order"
+                                : order.status === "Awaiting Shipment"
+                                ? "/dashboard/sales_order/update_shipment"
+                                : order.status === "Cancelled"
+                                ? "/dashboard/sales_order/cancel_order"
+                                : order.status === "Completed"
+                                ? "/dashboard/sales_order/completed_order"
+                                : order.status === "Return"
+                                ? "/dashboard/sales_order/return_item"
+                                : `/product/${order?.id}`
+                            }
                             className="hover:bg-[#f78e7c] flex justify-center dark:text-black"
                           >
                             Edit
@@ -383,6 +396,7 @@ export default function OrderTable() {
           </div>
         </div>
       </div>
+      <Outlet />
     </div>
   );
 }
