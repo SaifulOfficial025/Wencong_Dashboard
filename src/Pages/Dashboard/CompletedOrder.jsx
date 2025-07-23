@@ -44,7 +44,7 @@ const CompletedOrder = () => {
                 <input
                   type="text"
                   id="salesOrderNo"
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                  className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue="SO-000032"
                   // Removed readOnly
                 />
@@ -56,7 +56,7 @@ const CompletedOrder = () => {
                   <input
                     type="date"
                     id="date"
-                    className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                    className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     defaultValue="2023-07-18" // Example date
                     // Removed readOnly
                   />
@@ -72,7 +72,7 @@ const CompletedOrder = () => {
                 <label htmlFor="agentName" className="block text-sm font-medium text-[#DE472D] dark:text-[#DE472D] mb-1">Agent Name</label>
                 <select
                   id="agentName"
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                  className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   // Removed disabled
                 >
                   <option>COMPANY ABC</option>
@@ -85,7 +85,7 @@ const CompletedOrder = () => {
                 <label htmlFor="businessPartner" className="block text-sm font-medium text-[#DE472D] dark:text-[#DE472D] mb-1">Business Partner</label>
                 <select
                   id="businessPartner"
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                  className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   // Removed disabled
                 >
                   <option>Mr. Lim</option>
@@ -126,7 +126,7 @@ const CompletedOrder = () => {
                     <input
                       type="text"
                       id="creditTerm"
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                      className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       defaultValue="Net 30 days"
                       // Removed readOnly
                     />
@@ -136,7 +136,7 @@ const CompletedOrder = () => {
                     <input
                       type="text"
                       id="creditLimit"
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                      className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       defaultValue="RM30,000.00"
                       // Removed readOnly
                     />
@@ -147,7 +147,7 @@ const CompletedOrder = () => {
                   <textarea
                     id="remark"
                     rows="3"
-                    className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                    className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     defaultValue="(2 day delivery) Don't deliver on weekends"
                     // Removed readOnly
                   ></textarea>
@@ -158,7 +158,7 @@ const CompletedOrder = () => {
             {/* Status Dropdown Section */}
             <div className="mb-6">
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-1">Status</label>
-              <select id="status" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+              <select id="status" className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 // Removed disabled
               >
                 <option className="bg-white dark:bg-white text-gray-800 dark:text-gray-800">Awaiting Shipment</option>
@@ -222,7 +222,7 @@ const CompletedOrder = () => {
               {/* Promotion dropdown */}
               <div>
                 <label htmlFor="promotion" className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-1">Promotion</label>
-                <select id="promotion" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"> {/* Made editable */}
+                <select id="promotion" className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"> {/* Made editable */}
                   <option className="bg-white dark:bg-white text-gray-800 dark:text-gray-800">Deduct RM 10</option>
                   <option className="bg-white dark:bg-white text-gray-800 dark:text-gray-800">Deduct RM 20</option>
                   <option className="bg-white dark:bg-white text-gray-800 dark:text-gray-800">No Promotion</option>
@@ -254,7 +254,7 @@ const CompletedOrder = () => {
             {/* Courier Dropdown */}
             <div>
               <label htmlFor="courier" className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-1">Courier</label>
-              <select id="courier" className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"> {/* Made editable */}
+              <select id="courier" className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"> {/* Made editable */}
                 <option>Lalamove</option>
                 <option>Pos Laju</option>
                 <option>J&T Express</option>
@@ -266,7 +266,7 @@ const CompletedOrder = () => {
               <input
                 type="text"
                 id="trackingNumber"
-                className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 defaultValue="EN2223323232MY"
                 // Removed readOnly
               />
@@ -291,7 +291,7 @@ const CompletedOrder = () => {
               <input
                 type="text"
                 id="shipmentPrice"
-                className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 defaultValue="RM 23.00"
                 // Removed readOnly
               />
@@ -333,7 +333,7 @@ const CompletedOrder = () => {
             {/* Reason */}
             <div>
               <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-700 mb-1">Reason</label>
-              <select id="reason" className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"> {/* Made editable */}
+              <select id="reason" className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"> {/* Made editable */}
                 <option>Damaged item</option>
               </select>
             </div>
@@ -343,7 +343,7 @@ const CompletedOrder = () => {
               <input
                 type="text"
                 id="description"
-                className="block w-full rounded-md border-gray-300 dark:border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-white text-gray-800 dark:text-gray-800 p-2"
+                className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 defaultValue="Damaged item"
                 // Removed readOnly
               />
