@@ -57,9 +57,11 @@ function SalesAgentGroup() {
                       {item.status}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <button className="text-blue-600 hover:text-blue-800 font-medium">
-                        View
-                      </button>
+                      <Link to={`/dashboard/master_data/sales_agent_group/edit_sales_agent_group/`}>
+                        <button className="text-blue-600 hover:text-blue-800 font-medium">
+                          View
+                        </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}

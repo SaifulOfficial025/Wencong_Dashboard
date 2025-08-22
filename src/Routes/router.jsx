@@ -7,6 +7,7 @@ import SignUp from "../Pages/Authentication/SignIn";
 import SalesOrder from "../Pages/Dashboard/SalesOrder";
 import AddProduct from "../Pages/Dashboard/AddSellsOrder";
 import Dashboard from "../Pages/Dashboard/Dashboard";
+import RequireAuth from "./RequireAuth";
 import { MdOutlineBarChart } from "react-icons/md";
 import AgentSalesReport from "../Pages/Dashboard/AgentSalesReport";
 import ItemSalesReport from "../Pages/Dashboard/ItemSalesReport";
@@ -38,6 +39,7 @@ import UpdateShipment from "../Pages/Dashboard/UpdateShipment";
 import CancelOrder from "../Pages/Dashboard/CancelOrder";
 import CompletedOrder from "../Pages/Dashboard/CompletedOrder";
 import ReturnItem from "../Pages/Dashboard/ReturnItem";
+import EditNewSalesAgentGroup from "../Pages/Dashboard/EditNewSalesAgentGroup";
 
 // import AgentSalesReport from "../Pages/Dashboard/AgentSalesReport";
 
@@ -52,7 +54,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <Dashboard />,
+    element: (
+      <RequireAuth>
+        <Dashboard />
+      </RequireAuth>
+    ),
     children: [
       {
         index: true,
@@ -138,6 +144,10 @@ export const router = createBrowserRouter([
         path: "/dashboard/master_data/sales_agent_group/edit_promotion_details/",
         element: <EditPromotionalDetails />,
       },
+      {
+        path: "/dashboard/master_data/sales_agent_group/edit_sales_agent_group",
+        element: <EditNewSalesAgentGroup />,
+      }
     ],
   },
 ]);

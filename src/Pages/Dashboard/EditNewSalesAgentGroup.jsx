@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { ChevronLeft, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
-function AddNewSalesAgentGroup() {
+function EditNewSalesAgentGroup() {
   const {
     register,
     handleSubmit,
@@ -32,7 +32,7 @@ function AddNewSalesAgentGroup() {
 
       {/* Title */}
       <div className="bg-[#F04E24] text-white p-4 rounded-t-lg">
-        <h1 className="text-xl font-semibold">Add New Sales Agent Group</h1>
+        <h1 className="text-xl font-semibold">Edit Sales Agent Group</h1>
       </div>
 
       {/* Form */}
@@ -94,4 +94,4 @@ function AddNewSalesAgentGroup() {
   );
 }
 
-export default AddNewSalesAgentGroup;
+export default EditNewSalesAgentGroup;

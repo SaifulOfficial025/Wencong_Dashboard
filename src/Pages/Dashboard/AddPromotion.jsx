@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useContext, useRef } from "react";
+import { PromotionContext } from "../../ContextAPI/PromotionContext";
 import { useForm } from "react-hook-form";
 import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,10 +9,46 @@ function AddPromotion() {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
+    reset,
   } = useForm();
+  const { createPromotion, createPromotionAgentGroup } = useContext(PromotionContext);
+  const promotionIdRef = useRef(null);
 
-  const onSubmit = (data) => {
-    console.log(data);
+  // Handle Promotion creation
+  const handleAddPromotion = async () => {
+    const values = getValues();
+    // Convert date to ISO string
+    const startDate = values.fromDate ? new Date(values.fromDate) : null;
+    const endDate = values.toDate ? new Date(values.toDate) : null;
+    const res = await createPromotion(
+      values.promotionName,
+      values.status,
+      startDate,
+      endDate
+    );
+    window.alert(res.message);
+    if (res.status === 201 && res.data && res.data.id) {
+      promotionIdRef.current = res.data.id;
+    }
+  };
+
+  // Handle Promotion-Agent Group creation
+  const onSubmit = async (data) => {
+    // You may need to map productName and agentGroup to their respective IDs
+    // For now, using dummy IDs for demonstration
+    const payload = {
+      productId: 1, // Replace with actual product ID
+      promotionId: promotionIdRef.current || 1, // Use created promotion ID or dummy
+      agentGroupId: 1, // Replace with actual agent group ID
+      minQty: Number(data.minQuantity),
+      maxQty: Number(data.maxQuantity),
+      operation: data.operation,
+      value: Number(data.value),
+      isDeleted: 0
+    };
+    const res = await createPromotionAgentGroup(payload);
+    window.alert(res.message);
   };
 
   return (
@@ -113,6 +150,7 @@ function AddPromotion() {
               <button
                 type="button"
                 className="bg-[#F04E24] hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:ring-offset-2 flex items-center gap-1"
+                onClick={handleAddPromotion}
               >
                 <Plus size={16} /> Add New
               </button>
@@ -212,7 +250,7 @@ function AddPromotion() {
                   >
                     <option value="">Select Operation</option>
                     <option value="fixed">Fixed Price Promotion</option>
-                    <option value="percent">Percent Promotion</option>
+                    <option value="percentage">Percent Promotion</option>
                   </select>
                   <ChevronDown
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"

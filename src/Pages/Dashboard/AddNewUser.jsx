@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useContext } from "react";
+import { UserContext } from "../../ContextAPI/UserContext";
 import { useForm } from "react-hook-form";
 import { ChevronLeft, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,9 +10,24 @@ function AddNewUser() {
     handleSubmit,
     formState: { errors },
   } = useForm();
+  const { registerUser } = useContext(UserContext);
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = async (data) => {
+    // Map form data to API payload
+    const payload = {
+      name: data.name,
+      contactNumber: data.contactNumber,
+      userGroup: data.userGroup,
+      userLevel: data.userLevel,
+      permission: data.permission,
+      username: data.username,
+      email: data.username + "@example.com", // You may want to add an email field in the form
+      password: data.password,
+      status: data.status,
+      isDeleted: false
+    };
+    const res = await registerUser(payload);
+    window.alert(res.message);
   };
 
   return (

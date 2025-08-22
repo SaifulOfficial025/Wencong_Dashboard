@@ -1,13 +1,14 @@
 
-import { useState } from "react"
+import { useState, useContext } from "react"
+import { useNavigate } from "react-router-dom"
+import { AuthContext } from "../../ContextAPI/AuthContext"
 import { useForm } from "react-hook-form"
 import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa"
 import wencong_logo from '../../../public/huntrerboom_logo.png'
-
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-
+  const { signIn, loading, error } = useContext(AuthContext)
+  const navigate = useNavigate();
 
   const {
     register,
@@ -17,16 +18,18 @@ export default function LoginPage() {
   } = useForm({
     defaultValues: {
       email: "",
-      password: "",
-      rememberAccount: false,
+      password: ""
     },
   })
 
-
-  const onSubmit = (data) =>{
-    console.log(data)
+  const onSubmit = async (data) => {
+    const remember = !!data.rememberAccount;
+    const result = await signIn(data.email, data.password, remember);
+    if (result.success) {
+      navigate("/dashboard");
+    }
+    // error handled by context
   }
-
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -115,8 +118,8 @@ export default function LoginPage() {
             </div>
 
           <div className="flex items-center gap-2 pt-3 pb-10">
-            <input type="checkbox" defaultChecked className="checkbox rounded-[3px] h-[20px] w-[20px] bg-[#FFE4DF] border-none checked:bg-[#FFE4DF]" />
-              <p className="italic text-base text-[#7C97B6]">Remember Password</p>
+            <input type="checkbox" className="checkbox rounded-[3px] h-[20px] w-[20px] bg-[#FFE4DF] border-none checked:bg-[#FFE4DF]" {...register("rememberAccount")}/>
+              <p className="italic text-base text-[#7C97B6]">Remember Me</p>
           </div>
 
             {/* Submit Button */}
@@ -126,7 +129,7 @@ export default function LoginPage() {
             
               className="h-[45px] sm:h-[50px] md:h-[58px] w-full sm:w-[200px] md:w-[252px] bg-[#F04E24] text-base sm:text-lg md:text-[20px] hover:bg-orange-600 rounded-[12px] sm:rounded-[18px] text-white font-medium"
             >
-              {isLoading ? (
+              {loading ? (
                 <>
                   <span className="loading loading-spinner loading-sm mr-2"></span>
                   Signing In...
@@ -134,6 +137,9 @@ export default function LoginPage() {
               ) : (
                 "Sign In"
               )}
+          {error && (
+            <div className="text-red-500 text-center mt-2">{error}</div>
+          )}
             </button>
            </div>
           </form>
@@ -143,4 +149,5 @@ export default function LoginPage() {
       </div>
     </div>
   )
+
 }
