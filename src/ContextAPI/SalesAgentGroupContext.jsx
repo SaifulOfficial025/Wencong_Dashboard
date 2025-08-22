@@ -20,8 +20,19 @@ export const SalesAgentGroupProvider = ({ children }) => {
     }
   };
 
+  // Fetch agent groups
+  const fetchAgentGroups = async () => {
+    try {
+      const response = await fetch("http://10.10.13.83:9365/api/agent-group");
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { status: 500, message: "Network error", data: [] };
+    }
+  };
+
   return (
-    <SalesAgentGroupContext.Provider value={{ createAgentGroup }}>
+    <SalesAgentGroupContext.Provider value={{ createAgentGroup, fetchAgentGroups }}>
       {children}
     </SalesAgentGroupContext.Provider>
   );

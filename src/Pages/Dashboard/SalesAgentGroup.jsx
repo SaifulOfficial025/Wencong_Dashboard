@@ -1,22 +1,23 @@
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { SalesAgentGroupContext } from "../../ContextAPI/SalesAgentGroupContext";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function SalesAgentGroup() {
-  const groupData = [
-    {
-      groupName: "ABC Group",
-      status: "Active",
-    },
-    {
-      groupName: "ABC Group",
-      status: "Active",
-    },
-    {
-      groupName: "ABC Group",
-      status: "Active",
-    },
-  ];
+  const [groupData, setGroupData] = useState([]);
+  const { fetchAgentGroups } = useContext(SalesAgentGroupContext);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetchAgentGroups();
+      if (res.status === 200 && Array.isArray(res.data)) {
+        setGroupData(res.data.filter(item => !item.isDeleted));
+      } else {
+        setGroupData([]);
+      }
+    };
+    fetchData();
+  }, [fetchAgentGroups]);
 
   return (
     <div className="bg-white p-5 min-h-full rounded-lg shadow-md">
@@ -51,7 +52,7 @@ function SalesAgentGroup() {
                 {groupData.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {item.groupName}
+                      {item.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {item.status}

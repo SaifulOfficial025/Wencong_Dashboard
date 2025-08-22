@@ -1,23 +1,69 @@
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PromotionContext } from "../../ContextAPI/PromotionContext";
 
 function Promotion() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, reset } = useForm();
+  const { fetchPromotions } = useContext(PromotionContext);
+  const [promotions, setPromotions] = useState([]);
+  const [filteredPromotions, setFilteredPromotions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetchPromotions();
+      if (res.status === 200 && Array.isArray(res.data)) {
+        setPromotions(res.data);
+        setFilteredPromotions(res.data);
+      } else {
+        setPromotions([]);
+        setFilteredPromotions([]);
+      }
+    };
+    fetchData();
+  }, [fetchPromotions]);
+
+  // Filtering logic
   const onSubmit = (data) => {
-    console.log(data);
+    let filtered = promotions;
+    if (data.promotionName) {
+      filtered = filtered.filter(p => p.name.toLowerCase().includes(data.promotionName.toLowerCase()));
+    }
+    if (data.status) {
+      filtered = filtered.filter(p => p.status.toLowerCase().includes(data.status.toLowerCase()));
+    }
+    if (data.promotionPeriodFrom) {
+      filtered = filtered.filter(p => new Date(p.startDate) >= new Date(data.promotionPeriodFrom));
+    }
+    if (data.promotionPeriodTo) {
+      filtered = filtered.filter(p => new Date(p.endDate) <= new Date(data.promotionPeriodTo));
+    }
+    setFilteredPromotions(filtered);
+    setCurrentPage(1);
   };
 
-  // Dummy data for the table rows based on the image
-  const tableData = Array(7)
-    .fill()
-    .map((_, i) => ({
-      promotionName: "Promotion 1",
-      status: "Active",
-      promotionPeriod: "01/02/2024 - 01/12/2024",
-    }));
+  // Pagination logic
+  const totalItems = filteredPromotions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginatedPromotions = filteredPromotions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
+  // Get unique promotion names for dropdown
+  const promotionNames = Array.from(new Set(promotions.map(p => p.name)));
 
   return (
     <div className="p-6 bg-white min-h-screen text-[#F24E1E] font-semibold rounded-lg">
@@ -36,8 +82,9 @@ function Promotion() {
               className="w-full p-2 border border-rose-100 rounded bg-[#FDE5E0] focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
             >
               <option value="">Promotion Name</option>
-              <option value="promo1">Promotion 1</option>
-              <option value="promo2">Promotion 2</option>
+              {promotionNames.map((name, idx) => (
+                <option key={idx} value={name}>{name}</option>
+              ))}
             </select>
             <ChevronDown
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -112,13 +159,12 @@ function Promotion() {
             </tr>
           </thead>
           <tbody className="text-sm text-gray-700">
-            {tableData.map((item, i) => (
-              <tr key={i} className="border-b">
-                <td className="px-4 py-2">{item.promotionName}</td>
+            {paginatedPromotions.map((item, i) => (
+              <tr key={item.promotionId} className="border-b">
+                <td className="px-4 py-2">{item.name}</td>
                 <td className="px-4 py-2">{item.status}</td>
-                <td className="px-4 py-2">{item.promotionPeriod}</td>
+                <td className="px-4 py-2">{new Date(item.startDate).toLocaleDateString()} - {new Date(item.endDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                  {" "}
                   <Link to="/dashboard/master_data/sales_agent_group/edit_promotion_details">
                     View
                   </Link>
@@ -131,22 +177,22 @@ function Promotion() {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 text-sm bg-white dark:bg-white">
           <div className="flex items-center gap-2">
-            <select className="border rounded p-1 text-gray-700 dark:text-gray-700 dark:bg-white dark:border-gray-200">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>100</option>
+            <select className="border rounded p-1 text-gray-700 dark:text-gray-700 dark:bg-white dark:border-gray-200" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
             </select>
             <span className="text-gray-700 dark:text-gray-700">items</span>
           </div>
           <div className="text-gray-700 dark:text-gray-700">
-            Page 1 of 1 (10 items)
+            Page {currentPage} of {totalPages} ({totalItems} items)
           </div>
           <div className="flex">
-            <button className="px-2 py-1 border rounded text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">
+            <button className="px-2 py-1 border rounded text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200" onClick={handlePrevPage} disabled={currentPage === 1}>
               &#8249;
             </button>
-            <button className="px-2 py-1 border rounded ml-1 text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">
+            <button className="px-2 py-1 border rounded ml-1 text-gray-700 dark:text-gray-700 bg-white dark:bg-white hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200" onClick={handleNextPage} disabled={currentPage === totalPages}>
               &#8250;
             </button>
           </div>

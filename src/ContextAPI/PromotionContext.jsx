@@ -37,8 +37,19 @@ export const PromotionProvider = ({ children }) => {
     }
   };
 
+  // Fetch promotions
+  const fetchPromotions = async () => {
+    try {
+      const response = await fetch("http://10.10.13.83:9365/api/promotion");
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { status: 500, message: "Network error", data: [] };
+    }
+  };
+
   return (
-    <PromotionContext.Provider value={{ createPromotion, createPromotionAgentGroup }}>
+    <PromotionContext.Provider value={{ createPromotion, createPromotionAgentGroup, fetchPromotions }}>
       {children}
     </PromotionContext.Provider>
   );

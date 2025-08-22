@@ -1,10 +1,64 @@
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { UserContext } from "../../ContextAPI/UserContext";
 
 function UserSettings() {
-  const { register, handleSubmit } = useForm();
-  const onSubmit = (data) => console.log(data);
+  const { register, handleSubmit, reset } = useForm();
+  const { fetchUsers } = useContext(UserContext);
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetchUsers();
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const validUsers = res.data.filter(u => !u.isDeleted);
+        setUsers(validUsers);
+        setFilteredUsers(validUsers);
+      } else {
+        setUsers([]);
+        setFilteredUsers([]);
+      }
+    };
+    fetchData();
+  }, [fetchUsers]);
+
+  // Get unique usernames and names for dropdowns
+  const usernames = Array.from(new Set(users.map(u => u.username)));
+  const names = Array.from(new Set(users.map(u => u.name)));
+
+  // Filtering logic
+  const onSubmit = (data) => {
+    let filtered = users;
+    if (data.username) {
+      filtered = filtered.filter(u => u.username === data.username);
+    }
+    if (data.name) {
+      filtered = filtered.filter(u => u.name === data.name);
+    }
+    setFilteredUsers(filtered);
+    setCurrentPage(1);
+  };
+
+  // Pagination logic
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
 
   return (
     <div className="p-6 bg-[#FFF3F0] min-h-screen text-[#F24E1E] font-semibold mb-4">
@@ -22,7 +76,9 @@ function UserSettings() {
               className="w-full p-2 border rounded bg-[#FDE5E0]"
             >
               <option value="">Select Username</option>
-              <option value="ABC123">ABC123</option>
+              {usernames.map((username, idx) => (
+                <option key={idx} value={username}>{username}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -32,7 +88,9 @@ function UserSettings() {
               className="w-full p-2 border rounded bg-[#FDE5E0]"
             >
               <option value="">Select Name</option>
-              <option value="ALAN">ALAN</option>
+              {names.map((name, idx) => (
+                <option key={idx} value={name}>{name}</option>
+              ))}
             </select>
           </div>
           <button
@@ -66,42 +124,40 @@ function UserSettings() {
             </tr>
           </thead>
           <tbody className="text-sm text-gray-700">
-            {Array(7)
-              .fill()
-              .map((_, i) => (
-                <tr key={i} className="border-b">
-                  <td className="px-4 py-2">ABC123</td>
-                  <td className="px-4 py-2">ALAN</td>
-                  <td className="px-4 py-2 text-green-600">Active</td>
-                  <td className="px-4 py-2">abc123@gmail.com</td>
-                  <td className="px-4 py-2">+60123-1234567</td>
-                  <td className="px-4 py-2">Admin</td>
-                  <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                    <Link to="/dashboard/settings/users/edit_user">View</Link>
-                  </td>
-                </tr>
-              ))}
+            {paginatedUsers.map((user) => (
+              <tr key={user.userId} className="border-b">
+                <td className="px-4 py-2">{user.username}</td>
+                <td className="px-4 py-2">{user.name}</td>
+                <td className={`px-4 py-2 ${user.status === "active" ? "text-green-600" : "text-red-600"}`}>{user.status}</td>
+                <td className="px-4 py-2">{user.email}</td>
+                <td className="px-4 py-2">{user.contactNumber}</td>
+                <td className="px-4 py-2">{user.userGroup}</td>
+                <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
+                  <Link to="/dashboard/settings/users/edit_user">View</Link>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-3 text-xs sm:text-sm bg-white dark:bg-white text-gray-700 dark:text-gray-700 space-y-2 sm:space-y-0">
           <div>
-            <select className="border rounded p-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-200">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>100</option>
+            <select className="border rounded p-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-200" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
             </select>
           </div>
           <div>
-            <span className="dark:text-gray-700">Page 1 of 1 (10 items)</span>
+            <span className="dark:text-gray-700">Page {currentPage} of {totalPages} ({totalItems} items)</span>
           </div>
           <div>
-            <button className="px-2 border rounded bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">
+            <button className="px-2 border rounded bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200" onClick={handlePrevPage} disabled={currentPage === 1}>
               &#8249;
             </button>
-            <button className="px-2 border rounded ml-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200">
+            <button className="px-2 border rounded ml-1 bg-white dark:bg-white text-gray-700 dark:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:border-gray-200" onClick={handleNextPage} disabled={currentPage === totalPages}>
               &#8250;
             </button>
           </div>
