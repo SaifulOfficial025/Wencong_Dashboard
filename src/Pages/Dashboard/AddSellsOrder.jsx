@@ -276,6 +276,26 @@ const AddSellsOrder = () => {
                     placeholder="Type your message here..."
                   ></textarea>
                 </div>
+
+                {/* Status dropdown (matches screenshot style) */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-[#DE472D] mb-2">Status</label>
+                  <div className="relative">
+                    <select
+                      {...register("status")}
+                      className="w-full px-4 py-3 bg-rose-50 border border-rose-100 rounded-md text-gray-800 appearance-none"
+                    >
+                      <option value="awaiting">Awaiting Shipment</option>
+                      <option value="pending">Pending</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                    <svg className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                    </svg>
+                  </div>
+                </div>
+
               </div>
             </div>
 
