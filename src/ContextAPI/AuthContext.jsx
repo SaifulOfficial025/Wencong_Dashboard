@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -57,6 +57,40 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
   };
+
+  // Auto-logout helpers:
+  // - listen to storage events (other tabs)
+  // - poll storage periodically to catch removals in the same tab
+  useEffect(() => {
+    const handleStorage = () => {
+      const stored = localStorage.getItem('token') || sessionStorage.getItem('token') || null;
+      if (!stored) {
+        // token removed elsewhere
+        setUser(null);
+        setToken(null);
+      } else if (stored !== token) {
+        // token changed (signed in/out in another tab)
+        setToken(stored);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem('token') || sessionStorage.getItem('token') || null;
+      if (!stored && token) {
+        // token removed in this tab (or expired and cleared) -> sign out
+        setUser(null);
+        setToken(null);
+      }
+    }, 5000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   return (
     <AuthContext.Provider value={{ user, token, loading, error, signIn, signOut }}>

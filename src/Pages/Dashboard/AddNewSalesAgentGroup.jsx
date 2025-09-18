@@ -68,7 +68,6 @@ function AddNewSalesAgentGroup() {
                     <option value="">Select Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
                   </select>
                   <ChevronDown
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
