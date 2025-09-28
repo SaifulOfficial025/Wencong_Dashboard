@@ -2,7 +2,7 @@ import React, { createContext, useState } from "react";
 
 export const ProductContext = createContext();
 
-const BASE_URL = "http://10.10.13.83:9365";
+const BASE_URL = 'http://10.10.13.83:9365';
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);

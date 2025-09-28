@@ -6,6 +6,8 @@ import { createRoot } from 'react-dom/client'
 import { UserProvider } from "./ContextAPI/UserContext";
 import { PromotionProvider } from "./ContextAPI/PromotionContext";
 import { ProductProvider } from "./ContextAPI/ProductContext";
+import { PricingProvider } from "./ContextAPI/Pricing";
+import { OrderProvider } from "./ContextAPI/OrderContext";
 import './index.css'
 
 import {
@@ -21,7 +23,11 @@ createRoot(document.getElementById('root')).render(
           <PromotionProvider>
             <ProductProvider>
               <UserProvider>
-                <RouterProvider router={router} />
+                <OrderProvider>
+                  <PricingProvider>
+                    <RouterProvider router={router} />
+                  </PricingProvider>
+                </OrderProvider>
               </UserProvider>
             </ProductProvider>
           </PromotionProvider>

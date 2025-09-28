@@ -4,7 +4,7 @@ import { SalesContext } from "../../ContextAPI/SalesContext";
 import { ProductContext } from "../../ContextAPI/ProductContext";
 import { useForm, useFieldArray } from "react-hook-form";
 import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function AddPromotion() {
   const {
@@ -23,66 +23,49 @@ function AddPromotion() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
-  const { createPromotion, createPromotionAgentGroup } = useContext(PromotionContext);
+  const { createPromotion, createPromotionAgentGroup, createPromotionWithProducts } = useContext(PromotionContext);
+  const navigate = useNavigate();
   const { agentGroups, fetchAgentGroups } = useContext(SalesContext);
   const { products, fetchProducts } = useContext(ProductContext);
   const promotionIdRef = useRef(null);
 
-  // Handle Promotion creation
-  const handleAddPromotion = async () => {
-    const values = getValues();
-    // Convert date to ISO string
-    const startDate = values.fromDate ? new Date(values.fromDate) : null;
-    const endDate = values.toDate ? new Date(values.toDate) : null;
-    const res = await createPromotion(
-      values.promotionName,
-      values.status,
-      startDate,
-      endDate
-    );
-    window.alert(res.message);
-    if (res.status === 201 && res.data && res.data.id) {
-      promotionIdRef.current = res.data.id;
-    }
-  };
+  // previous individual creation flow left for compatibility; using consolidated flow on Save below
 
-  // Handle Promotion-Agent Group creation for multiple items
+  // Handle submit: create promotion with products in one request
   const onSubmit = async (data) => {
     const items = data.items || [];
-
     if (!items.length) {
       alert("Add at least one product row before saving.");
       return;
     }
 
-    if (!promotionIdRef.current) {
-      alert("Please create a promotion first by clicking 'Add New' at the top.");
-      return;
-    }
+    const startDate = data.fromDate ? new Date(data.fromDate).toISOString() : null;
+    const endDate = data.toDate ? new Date(data.toDate).toISOString() : null;
+
+    const payload = {
+      name: data.promotionName,
+      status: data.status,
+      startDate,
+      endDate,
+      promotionProducts: items.map((it) => ({
+        productId: Number(it.productId),
+        agentGroupId: Number(it.agentGroupId),
+        minimumQuantity: Number(it.minQuantity || it.minQuantity || it.minQuantity),
+        maximumQuantity: Number(it.maxQuantity || it.maxQty || it.maxQuantity),
+        operationType: it.operation,
+        value: Number(it.value),
+      })),
+    };
 
     try {
-      const promises = items.map((it) => {
-        const payload = {
-          productId: Number(it.productId),
-          promotionId: promotionIdRef.current,
-          agentGroupId: Number(it.agentGroupId),
-          minQty: Number(it.minQuantity),
-          maxQty: Number(it.maxQuantity),
-          operation: it.operation,
-          value: Number(it.value),
-          isDeleted: 0,
-        };
-        return createPromotionAgentGroup(payload);
-      });
-
-      const results = await Promise.all(promises);
-      // Show simple summary
-      const successes = results.filter((r) => r && r.status >= 200 && r.status < 300).length;
-      window.alert(`Saved ${successes} of ${results.length} items.`);
-      // Optionally reset rows
-      // reset();
+      const res = await createPromotionWithProducts(payload);
+      if (res && (res.status === 200 || res.status === 201)) {
+        navigate("/dashboard/master_data/promotion");
+      } else {
+        window.alert(res.message || "Failed to create promotion");
+      }
     } catch (err) {
-      window.alert("Error saving promotion items: " + (err.message || err));
+      window.alert("Network error: " + (err.message || err));
     }
   };
 

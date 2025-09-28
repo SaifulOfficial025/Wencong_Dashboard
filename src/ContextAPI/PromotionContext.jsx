@@ -6,7 +6,7 @@ export const PromotionProvider = ({ children }) => {
   // Create Promotion
   const createPromotion = async (name, status, startDate, endDate) => {
     try {
-      const response = await fetch("http://10.10.13.83:9365/api/promotion/create", {
+      const response = await fetch("/api/promotion/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -20,10 +20,28 @@ export const PromotionProvider = ({ children }) => {
     }
   };
 
+  // Create Promotion with promotionProducts in one payload
+  const createPromotionWithProducts = async (payload) => {
+    try {
+      const response = await fetch("/api/promotion/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      // include status for callers
+      return { status: response.status, ...data };
+    } catch (error) {
+      return { status: 500, message: "Network error" };
+    }
+  };
+
   // Create Promotion-Agent Group Association
   const createPromotionAgentGroup = async (payload) => {
     try {
-      const response = await fetch("http://10.10.13.83:9365/api/promotion-agent-group/create", {
+      const response = await fetch("/api/promotion-agent-group/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,7 +58,7 @@ export const PromotionProvider = ({ children }) => {
   // Fetch promotions
   const fetchPromotions = async () => {
     try {
-      const response = await fetch("http://10.10.13.83:9365/api/promotion");
+  const response = await fetch("/api/promotion", { headers: { "Accept": "application/json" } });
       const data = await response.json();
       return data;
     } catch (error) {
@@ -48,8 +66,25 @@ export const PromotionProvider = ({ children }) => {
     }
   };
 
+  // Update promotion by id (PUT /api/promotion/{id})
+  const updatePromotion = async (promotionId, payload) => {
+    try {
+      const response = await fetch(`/api/promotion/${promotionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      return { status: response.status, ...data };
+    } catch (error) {
+      return { status: 500, message: "Network error" };
+    }
+  };
+
   return (
-    <PromotionContext.Provider value={{ createPromotion, createPromotionAgentGroup, fetchPromotions }}>
+    <PromotionContext.Provider value={{ createPromotion, createPromotionWithProducts, createPromotionAgentGroup, fetchPromotions, updatePromotion }}>
       {children}
     </PromotionContext.Provider>
   );

@@ -1,15 +1,23 @@
 import { useFieldArray, useForm } from "react-hook-form";
 import { MdPrint } from "react-icons/md";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useContext } from "react";
+import { OrderContext } from "../../ContextAPI/OrderContext";
+import { PromotionContext } from "../../ContextAPI/PromotionContext";
+import { SalesContext } from "../../ContextAPI/SalesContext";
+import { ProductContext } from "../../ContextAPI/ProductContext";
 
 const AddSellsOrder = () => {
   const { id } = useParams();
-  const [selectedPromotion, setSelectedPromotion] = useState("0");
+  // empty string => user hasn't selected a promotion (show suggested available);
+  // "0" => user explicitly selected "No Promotion" (apply zero)
+  const [selectedPromotion, setSelectedPromotion] = useState("");
   const [totals, setTotals] = useState({
     totalQty: 0,
     subtotal: 0,
-    promotion: 0,
+    promotionApplied: 0,
+    promotionSuggested: 0,
     gst: 0,
     total: 0,
   });
@@ -50,7 +58,12 @@ const AddSellsOrder = () => {
 
   const watchedItems = watch("items");
 
-  // Update totals whenever items or promotion changes
+  // domain data state (promotions/products/agents) must be declared before effects that use them
+  const [promotions, setPromotions] = useState([]);
+  const [agents, setAgents] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  // Update totals whenever items, promotions or selected promotion changes
   useEffect(() => {
     const subtotal = watchedItems.reduce((sum, item) => {
       const price = parseFloat(item.price) || 0;
@@ -62,25 +75,197 @@ const AddSellsOrder = () => {
       return sum + qty;
     }, 0);
 
-    const promotionValue = parseFloat(selectedPromotion) || 0;
-    const subtotalAfterPromotion = subtotal - promotionValue;
+    // Compute promotion discounts:
+    // - promotionSuggested: what promotions (any) would give as discounts
+    // - promotionApplied: discount from the explicitly selected promotion (if any)
+    let promotionSuggested = 0;
+    let promotionApplied = 0;
+    const applyPromoProductsToItems = (promoProducts, accumulateTo) => {
+      promoProducts.forEach((pp) => {
+        const val = parseFloat(pp.value) || 0;
+        // match items by productId
+        const matchedItems = (watchedItems || []).filter((it) => {
+          // item.productId may be under different keys depending on how it's set
+          const itemPid = it.productId || it.productId === 0 ? it.productId : it.productId;
+          return String(itemPid) === String(pp.productId);
+        });
+        matchedItems.forEach((mi) => {
+          const qty = Number(mi.qty) || 0;
+          const minQ = Number(pp.minimumQuantity) || 0;
+          const maxQ = pp.maximumQuantity !== undefined && pp.maximumQuantity !== null ? Number(pp.maximumQuantity) : Infinity;
+          if (qty < minQ || qty > maxQ) return; // quantity outside promotion range
+          const itemTotal = Number(mi.price) || qty * (Number(mi.unitPrice) || 0);
+          if (pp.operationType === "percentage") {
+            accumulateTo.value += itemTotal * (val / 100);
+          } else {
+            // fixed amount; apply per matching item occurrence
+            accumulateTo.value += val;
+          }
+        });
+      });
+    };
+
+    // compute suggested discount across all promotions using subtotal
+    // For clarity we compute per-promotion value and take the max (best promotion suggestion)
+    const perPromoValues = (promotions || []).map((promo) => {
+      if (!promo || !Array.isArray(promo.promotionProducts)) return 0;
+      let acc = 0;
+      promo.promotionProducts.forEach((pp) => {
+        const val = parseFloat(pp.value) || 0;
+        if (pp.operationType === "percentage") acc += subtotal * (val / 100);
+        else acc += val;
+      });
+      return acc;
+    });
+    promotionSuggested = perPromoValues.length ? Math.max(...perPromoValues) : 0;
+
+    // compute applied discount only when a promotion is selected (apply to subtotal)
+    if (selectedPromotion && selectedPromotion !== "0") {
+      const promo = (promotions || []).find((p) => String(p.promotionId) === String(selectedPromotion));
+      if (promo && Array.isArray(promo.promotionProducts)) {
+        let acc = 0;
+        promo.promotionProducts.forEach((pp) => {
+          const val = parseFloat(pp.value) || 0;
+          if (pp.operationType === "percentage") acc += subtotal * (val / 100);
+          else acc += val;
+        });
+        promotionApplied = acc;
+      }
+    }
+
+    const subtotalAfterPromotion = Math.max(0, subtotal - promotionApplied);
     const gst = subtotalAfterPromotion * 0.06;
     const total = subtotalAfterPromotion + gst;
 
     setTotals({
       totalQty,
       subtotal,
-      promotion: promotionValue,
+      promotionApplied,
+      promotionSuggested,
       gst,
       total,
     });
 
-    setValue("promotion", promotionValue.toString());
-  }, [watchedItems, selectedPromotion, setValue]);
+    // Keep promotion field as the selected promotion id for payload
+    setValue("promotion", selectedPromotion);
+  }, [watchedItems, selectedPromotion, promotions, setValue]);
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
-    alert("Form submitted successfully!");
+  const { createOrder } = useContext(OrderContext);
+  const navigate = useNavigate();
+  const { fetchPromotions } = useContext(PromotionContext);
+  const { fetchAgents } = useContext(SalesContext);
+  const { fetchProducts } = useContext(ProductContext);
+
+  // load promotions, agents and products on mount
+  useEffect(() => {
+    // load promotions for the promotion select
+    fetchPromotions()
+      .then((res) => {
+        if (Array.isArray(res)) setPromotions(res);
+        else if (res && Array.isArray(res.data)) setPromotions(res.data);
+      })
+      .catch(() => {});
+
+    // load agents
+    fetchAgents({ page: 1, perPage: 1000 })
+      .then((res) => {
+        if (res && Array.isArray(res.data)) setAgents(res.data);
+        else if (Array.isArray(res)) setAgents(res);
+      })
+      .catch(() => {});
+
+    // load products
+    fetchProducts({ page: 1, perPage: 1000 })
+      .then((res) => {
+        if (res && Array.isArray(res.data)) setProducts(res.data);
+        else if (Array.isArray(res)) setProducts(res);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When agent changes, fetch agent detail to prefill credit fields
+  const watchedAgent = watch("agentName");
+  useEffect(() => {
+    if (!watchedAgent) return;
+    const fetchAgentDetail = async (id) => {
+      try {
+        const res = await fetch(`/api/agents/${id}`, { headers: { Accept: "application/json" } });
+        const json = await res.json();
+        const agent = json.data || json;
+        if (agent) {
+          setValue("creditLimit", agent.creditLimit || agent.credit_limit || "");
+          setValue("creditTerm", agent.creditTerm || agent.credit_term || "");
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchAgentDetail(watchedAgent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedAgent]);
+
+  const onSubmit = async (data) => {
+    // Build payload according to API spec
+    const payload = {
+      orderNumber: data.salesOrderNo || `ORD-${Date.now()}`,
+      agentId: data.agentName || "",
+      partnerId: data.businessPartner || "",
+      promotionId: Number(data.promotion) || 0,
+      soNumber: data.salesOrderNo || "",
+      date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+      address: data.contactAddress || "",
+      // addressPostalCode: "",
+      // addressCity: "",
+      // addressState: "",
+      status: data.status || "pending",
+      remark: data.remark || "",
+      subTotal: Number(totals.subtotal) || 0,
+      tax: Number(totals.gst) || 0,
+      total: Number(totals.total) || 0,
+      courier: "",
+      shippingPrice: 0,
+      returnReason: "",
+      returnRemark: "",
+      shippingInvoice: null,
+      approveDate: null,
+      shippedDate: null,
+      cancelledDate: null,
+      cancelledReason: "",
+      completedDate: null,
+      returnDate: null,
+      autocountStatus: "",
+      autocountAccountId: "",
+      isDeleted: 0,
+      printDatetime: null,
+      creditTerm: data.creditTerm || "",
+      creditLimit: data.creditLimit || "",
+      items: (data.items || []).map((it) => ({
+        productId: it.productId ? Number(it.productId) : 0,
+        productCode: it.productCode || "",
+        productDescription: it.description || "",
+        productQty: Number(it.qty) || 0,
+        productUom: it.uom || "",
+        productUnitPrice: Number(it.unitPrice) || 0,
+        productTotal: Number(it.price) || 0,
+        isDeleted: 0,
+        isReturn: 0,
+        orderId: 0,
+      })),
+    };
+
+    try {
+      const res = await createOrder(payload);
+      if (res.status >= 200 && res.status < 300) {
+        // success - navigate to sales order list
+        window.alert("Order created successfully");
+        navigate("/dashboard/sales_order");
+      } else {
+        window.alert("Failed to create order: " + (res.data?.message || JSON.stringify(res.data)));
+      }
+    } catch (err) {
+      window.alert("Error creating order: " + (err.message || err));
+    }
   };
 
   const addNewItem = () => {
@@ -195,8 +380,15 @@ const AddSellsOrder = () => {
                   className="select select-bordered w-full bg-white dark:bg-white text-black dark:text-black dark:border-gray-300"
                 >
                   <option value="">Select Agent</option>
-                  <option value="agent1">Agent 1</option>
-                  <option value="agent2">Agent 2</option>
+                  {agents && agents.map((a) => {
+                    const id = a.agentId || a.id || a._id || a.agent_id;
+                    const name = a.agentName || a.companyName || a.name || a.agent_name;
+                    return (
+                      <option key={id} value={String(id)}>
+                        {name}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>
@@ -296,8 +488,25 @@ const AddSellsOrder = () => {
                   </div>
                 </div>
 
-              </div>
+
             </div>
+              </div>
+                  <div className="mt-6 mb-6">
+                  <label className="block text-sm font-medium text-[#DE472D] mb-2">Shipment</label>
+                  <div className="relative">
+                    <select
+                      {...register("status")}
+                      className="w-full px-4 py-3 bg-rose-50 border border-rose-100 rounded-md text-gray-800 appearance-none"
+                    >
+                      <option value="" selected>Choose Shipment</option>
+                      <option value="fedex">Fedex</option>
+                      <option value="air">Air</option>
+                    </select>
+                    <svg className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                    </svg>
+                  </div>
+                </div>
 
             {/* Items Table */}
             <div className="mb-6">
@@ -349,11 +558,35 @@ const AddSellsOrder = () => {
                           />
                         </td>
                         <td>
-                          <input
-                            {...register(`items.${index}.description`)}
-                            className="input input-bordered input-sm w-full bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-300 placeholder-gray-500 dark:placeholder-gray-500"
-                            placeholder="Description"
-                          />
+                          <select
+                            {...register(`items.${index}.productId`)}
+                            className="select select-bordered select-sm w-full bg-white dark:bg-white text-gray-700 dark:text-gray-700 dark:border-gray-300"
+                            onChange={(e) => {
+                              const prodId = e.target.value;
+                              const prod = products.find((p) => String(p.productId || p.id || p._id) === String(prodId));
+                              if (prod) {
+                                const code = prod.code || prod.productCode || prod.sku || prod.product_code || "";
+                                const name = prod.name || prod.productName || prod.description || "";
+                                const unitPrice = prod.price || prod.unitPrice || prod.sellingPrice || 0;
+                                setValue(`items.${index}.productCode`, code);
+                                setValue(`items.${index}.description`, name);
+                                setValue(`items.${index}.unitPrice`, Number(unitPrice).toFixed(2));
+                                const qty = Number.parseFloat(watch(`items.${index}.qty`)) || 0;
+                                setValue(`items.${index}.price`, (qty * Number(unitPrice)).toFixed(2));
+                              }
+                            }}
+                          >
+                            <option value="">Select product</option>
+                            {products && products.map((p) => {
+                              const pid = p.productId || p.id || p._id;
+                              const pname = p.name || p.productName || p.description || p.code || `Product ${pid}`;
+                              return (
+                                <option key={pid} value={String(pid)}>
+                                  {pname}
+                                </option>
+                              );
+                            })}
+                          </select>
                         </td>
                         <td>
                           <input
@@ -446,11 +679,15 @@ const AddSellsOrder = () => {
                   value={selectedPromotion}
                   onChange={(e) => setSelectedPromotion(e.target.value)}
                 >
-                  <option value="0">-- Select Promotion --</option>
+                  <option value="">-- Select Promotion --</option>
                   <option value="0">No Promotion</option>
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
+                  {promotions && promotions.length > 0
+                    ? promotions.map((p) => (
+                        <option key={p.promotionId} value={String(p.promotionId)}>
+                          {p.name || p.title || `Promotion ${p.promotionId}`}
+                        </option>
+                      ))
+                    : null}
                 </select>
               </div>
 
@@ -468,7 +705,13 @@ const AddSellsOrder = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Promotion</span>
                   <span className="font-semibold">
-                    -${totals.promotion.toFixed(2)}
+                    {selectedPromotion && selectedPromotion !== "0" ? (
+                      <>-${totals.promotionApplied.toFixed(2)}</>
+                    ) : selectedPromotion === "0" ? (
+                      "$0.00"
+                    ) : (
+                      <>{totals.promotionSuggested > 0 ? `- $${totals.promotionSuggested.toFixed(2)} (available)` : "$0.00"}</>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

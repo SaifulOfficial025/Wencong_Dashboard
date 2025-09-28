@@ -1,5 +1,5 @@
 import React, { useRef, useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { CiImageOn } from "react-icons/ci";
@@ -8,6 +8,7 @@ import { SalesContext } from "../../ContextAPI/SalesContext";
 function AddSalesAgent() {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const navigate = useNavigate();
   const { createAgent, loading, error, agentGroups, fetchAgentGroups } = useContext(SalesContext);
   const {
     register,
@@ -24,10 +25,10 @@ function AddSalesAgent() {
       // Map form fields to API expected fields
       const fieldMapping = {
         agentCode: "code",
-        agentName: "companyName", // Based on API response, this maps to companyName
+        agentName: "agentName",
         contactNumber: "contactNumber",
         additionalContactNumber: "addContactNumber",
-        email: "email",
+        // do not include email in payload unless backend expects it
         address: "address",
         postalCode: "addressPostalCode",
         city: "addressCity", 
@@ -42,43 +43,99 @@ function AddSalesAgent() {
         // Skip confirmPassword as it's not needed in API
       };
 
-      // Append form data with proper field names
-      Object.keys(data).forEach((key) => {
-        if (key === "confirmPassword") return; // Skip confirm password
-        
-        const apiFieldName = fieldMapping[key] || key;
-        let value = data[key];
-        
-        // agentGroup will be the agentGroupId (string) from the select value
-        if (key === "agentGroup") {
-          // ensure numeric string or empty
-          value = value ? String(value) : value;
+      // Validate and normalize fields before appending
+      // Password rules: at least one uppercase, one lowercase, one number, >= 6 chars
+      const pwd = data.newPassword;
+      if (pwd !== undefined && pwd !== null && pwd !== "") {
+        if (typeof pwd !== "string") {
+          alert("Password must be a string");
+          return;
         }
-        
-        formData.append(apiFieldName, value);
-      });
+        const pwdErrors = [];
+        if (!/(?=.*[a-z])/.test(pwd) || !/(?=.*[A-Z])/.test(pwd) || !/(?=.*\d)/.test(pwd)) {
+          pwdErrors.push("Password must contain at least one uppercase letter, one lowercase letter, and one number");
+        }
+        if (pwd.length < 6) pwdErrors.push("Password must be at least 6 characters long");
+        if (pwdErrors.length) {
+          alert(pwdErrors.join("; "));
+          return;
+        }
+      }
 
-      // Add name field (seems to be separate from companyName based on API)
-      formData.append("name", data.agentName || ""); // Use agentName as name too
-      
+      // Status: ensure string and one of allowed values
+      let statusVal = data.status;
+      if (statusVal !== undefined && statusVal !== null && statusVal !== "") {
+        statusVal = String(statusVal).toLowerCase();
+        if (!["active", "inactive"].includes(statusVal)) {
+          alert("Status must be one of: active, inactive");
+          return;
+        }
+      }
+
+      // Credit limit normalization will be done when appending; but check format early
+
       // Append file if selected
       if (selectedFile) {
         formData.append("file", selectedFile, selectedFile.name);
       }
 
+      // Build FormData entries (append after file so order is file then fields)
+      Object.keys(data).forEach((key) => {
+        // Skip fields backend should not receive
+        if (key === "confirmPassword" || key === "email") return;
+
+        let apiFieldName = fieldMapping[key] || key;
+        let value = data[key];
+
+        if (key === "agentGroup") {
+          value = value ? String(value) : value;
+        }
+
+        if (key === "creditLimit") {
+          // normalize creditLimit to a currency-style string with two decimals
+          const num = Number(String(value).replace(/,/g, ""));
+          if (Number.isNaN(num)) {
+            alert("Credit limit must be a valid number (e.g., 1000.00)");
+            return;
+          }
+          value = num.toFixed(2);
+        }
+
+        if (key === "status") {
+          // we validated/normalized earlier
+          value = statusVal || value;
+          apiFieldName = "status";
+        }
+
+        if (key === "newPassword") {
+          // map newPassword -> password
+          apiFieldName = "password";
+          value = data.newPassword;
+        }
+
+        // Only append non-empty values to avoid sending unwanted empty properties
+        if (value !== undefined && value !== null && value !== "") {
+          formData.append(apiFieldName, value);
+        }
+      });
+
       // Call API through context
       const response = await createAgent(formData);
       
-      if (response.status === 201) {
-        alert(response.data.message || "Agent created successfully!");
-        // Reset form and file
+      if (response && response.status === 201) {
+        // Reset form and file then navigate back to the sales agent list
         reset();
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
+        navigate("/dashboard/master_data/sales_agent");
+        return;
       } else {
-        alert(response.data.message || "Failed to create agent");
+        alert(
+          (response && (response.message || (response.data && response.data.message))) ||
+            "Failed to create agent"
+        );
       }
     } catch (err) {
       alert("Error creating agent: " + (err.message || "Unknown error"));
@@ -117,7 +174,7 @@ function AddSalesAgent() {
             <h2 className="text-lg font-medium text-gray-700 mb-4">
               Sales Agent Detail
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Agent Code */}
               <div>
                 <label
@@ -130,7 +187,6 @@ function AddSalesAgent() {
                   id="agent-code"
                   type="text"
                   {...register("agentCode")}
-                  defaultValue="Agent 1001"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -146,12 +202,11 @@ function AddSalesAgent() {
                   id="agent-name"
                   type="text"
                   {...register("agentName")}
-                  defaultValue="Company ABC"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
               {/* Email */}
-              <div>
+              {/* <div>
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-[#F04E24] mb-2"
@@ -162,10 +217,9 @@ function AddSalesAgent() {
                   id="email"
                   type="email"
                   {...register("email")}
-                  defaultValue="company123@gmail.com"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
-              </div>
+              </div> */}
             </div>
             <div className="grid grid-cols-2 gap-6">
               {/* Contact Number */}
@@ -180,7 +234,6 @@ function AddSalesAgent() {
                   id="contact-number"
                   type="tel"
                   {...register("contactNumber")}
-                  defaultValue="+60123-1234567"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -197,7 +250,6 @@ function AddSalesAgent() {
                   id="additional-contact-number"
                   type="tel"
                   {...register("additionalContactNumber")}
-                  defaultValue="+60123-1234567"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -260,7 +312,7 @@ function AddSalesAgent() {
                   <select
                     id="status"
                     {...register("status", { required: true })}
-                    defaultValue="Active"
+                    
                     className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
                   >
                     <option value="">Select Status</option>
@@ -286,14 +338,12 @@ function AddSalesAgent() {
                   <select
                     id="account-book"
                     {...register("accountBook", { required: true })}
-                    defaultValue="Hunter Boom Sdn Bhd"
                     className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
                   >
                     <option value="">Select Account Book</option>
                     <option value="Hunter Boom Sdn Bhd">
                       Hunter Boom Sdn Bhd
                     </option>
-                    <option value="Another Book">Another Book</option>
                   </select>
                   <ChevronDown
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -314,7 +364,6 @@ function AddSalesAgent() {
                   id="credit-limit"
                   type="text"
                   {...register("creditLimit")}
-                  defaultValue="RM30,000.00"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -331,7 +380,6 @@ function AddSalesAgent() {
                   id="credit-term"
                   type="text"
                   {...register("creditTerm")}
-                  defaultValue="30days"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -348,7 +396,6 @@ function AddSalesAgent() {
                   id="address"
                   type="text"
                   {...register("address")}
-                  defaultValue="No 123, Jalan BAAAAA, 33, Taman XXXX"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -365,7 +412,6 @@ function AddSalesAgent() {
                   id="postal-code"
                   type="text"
                   {...register("postalCode")}
-                  defaultValue="81100"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -382,7 +428,6 @@ function AddSalesAgent() {
                   id="city"
                   type="text"
                   {...register("city")}
-                  defaultValue="XXX"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>
@@ -399,7 +444,6 @@ function AddSalesAgent() {
                   id="state"
                   type="text"
                   {...register("state")}
-                  defaultValue="Johor"
                   className="w-full px-3 py-2 bg-rose-50 text-black border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
                 />
               </div>

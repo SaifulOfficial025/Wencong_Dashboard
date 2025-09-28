@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { SalesAgentGroupContext } from "../../ContextAPI/SalesAgentGroupContext";
 import { useForm } from "react-hook-form";
 import { ChevronLeft, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function AddNewSalesAgentGroup() {
   const {
@@ -11,10 +11,17 @@ function AddNewSalesAgentGroup() {
     formState: { errors },
   } = useForm();
   const { createAgentGroup } = useContext(SalesAgentGroupContext);
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     const res = await createAgentGroup(data.groupName, data.status);
-    window.alert(res.message);
+    if (res && res.status && (res.status === 200 || res.status === 201)) {
+      // created successfully, navigate to list page
+      navigate("/dashboard/master_data/sales_agent_group");
+    } else {
+      // fallback: show message and stay
+      window.alert(res && res.message ? res.message : "Failed to create agent group");
+    }
   };
 
   return (

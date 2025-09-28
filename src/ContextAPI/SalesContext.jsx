@@ -2,7 +2,7 @@ import React, { createContext, useState } from "react";
 
 export const SalesContext = createContext();
 
-const BASE_URL = "http://10.10.13.83:9365";
+const BASE_URL = 'http://10.10.13.83:9365';
 
 export const SalesProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -28,8 +28,12 @@ export const SalesProvider = ({ children }) => {
       } catch (e) {
         // ignore
       }
-      const res = await fetch(`${BASE_URL}/api/agent/create`, {
+      const res = await fetch(`/api/agents/create`, {
         method: "POST",
+        // Not setting Content-Type so browser sets multipart/form-data boundary automatically
+        headers: {
+          Accept: "application/json",
+        },
         body: formData,
       });
 
@@ -64,8 +68,8 @@ export const SalesProvider = ({ children }) => {
       if (f.agentCode) params.set("code", f.agentCode);
       if (f.agentGroup) params.set("agentGroupId", f.agentGroup);
 
-      const url = `${BASE_URL}/api/agent${params.toString() ? `?${params.toString()}` : ""}`;
-      const res = await fetch(url);
+  const url = `/api/agents${params.toString() ? `?${params.toString()}` : ""}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
       const json = await res.json();
 
       // Basic error handling
@@ -119,8 +123,8 @@ export const SalesProvider = ({ children }) => {
   // Fetch agent groups for selects
   const fetchAgentGroups = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/agent-group`);
-      const json = await res.json();
+  const res = await fetch(`/api/agent-group`, { headers: { Accept: "application/json" } });
+  const json = await res.json();
       if (!res.ok) {
         // ignore error but set empty
         return [];

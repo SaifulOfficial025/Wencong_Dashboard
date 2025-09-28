@@ -1,17 +1,123 @@
-import React from "react";
-import { useForm } from "react-hook-form";
+import React, { useContext, useEffect, useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
 
+import { SalesContext } from "../../ContextAPI/SalesContext";
+import { ProductContext } from "../../ContextAPI/ProductContext";
+import { PromotionContext } from "../../ContextAPI/PromotionContext";
+import { useLocation, useNavigate } from "react-router-dom";
+
 function EditPromotionalDetails() {
+  const { agentGroups, fetchAgentGroups } = useContext(SalesContext);
+  const { products, fetchProducts } = useContext(ProductContext);
+  const { fetchPromotions, updatePromotion } = useContext(PromotionContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentPromotionId, setCurrentPromotionId] = useState(null);
+
+  useEffect(() => {
+    if (!agentGroups || agentGroups.length === 0) {
+      fetchAgentGroups().catch(() => {});
+    }
+    if (!products || products.length === 0) {
+      fetchProducts().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const {
     register,
+    control,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      items: [
+        { productId: "", agentGroupId: "", minQuantity: "1", maxQuantity: "5", operation: "fixed", value: "" },
+      ],
+    },
+  });
 
   const onSubmit = (data) => {
-    console.log(data);
+    // Build payload per API: name, status, startDate, endDate, promotionProducts
+    const payload = {
+      name: data.promotionName,
+      status: data.status,
+      startDate: data.fromDate,
+      endDate: data.toDate,
+      promotionProducts: (data.items || []).map((it) => ({
+        productId: Number(it.productId),
+        agentGroupId: Number(it.agentGroupId),
+        minimumQuantity: Number(it.minQuantity || it.minQuantity || it.minQuantity) || 0,
+        maximumQuantity: Number(it.maxQuantity || it.maxQty || it.maxQuantity) || 0,
+        operationType: it.operation,
+        value: Number(it.value) || 0,
+      })),
+    };
+
+    if (!currentPromotionId) {
+      window.alert("No promotion id selected");
+      return;
+    }
+
+    updatePromotion(currentPromotionId, payload).then((res) => {
+      if (res && (res.status === 200 || res.status === 201)) {
+        window.alert(res.message || "Promotion updated");
+        navigate("/dashboard/master_data/promotion");
+      } else {
+        window.alert(res.message || "Failed to update promotion");
+      }
+    }).catch(() => {
+      window.alert("Network error while updating promotion");
+    });
   };
+
+  const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
+  // On mount: fetch promotions and prefill form using ?id= in URL or first promotion
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const idParam = params.get("id");
+
+    fetchPromotions().then((res) => {
+      // fetchPromotions returns either full response object or array/data
+      const list = Array.isArray(res) ? res : (res && res.data) ? res.data : [];
+      if (!list || list.length === 0) return;
+
+      let promo = null;
+      if (idParam) {
+        promo = list.find((p) => String(p.id ?? p.promotionId) === String(idParam));
+      }
+      if (!promo) promo = list[0];
+      if (!promo) return;
+
+      setCurrentPromotionId(promo.id ?? promo.promotionId);
+
+      // map promotionProducts into items with matching register names
+      const items = (promo.promotionProducts || []).map((pp) => ({
+        productId: pp.productId ?? pp.product_id ?? "",
+        agentGroupId: pp.agentGroupId ?? pp.agent_group_id ?? pp.agentGroup ?? "",
+        minQuantity: pp.minimumQuantity ?? pp.minimum_quantity ?? pp.minQuantity ?? "",
+        maxQuantity: pp.maximumQuantity ?? pp.maximum_quantity ?? pp.maxQuantity ?? "",
+        operation: pp.operationType ?? pp.operation_type ?? pp.operation ?? "",
+        value: pp.value ?? pp.amount ?? "",
+      }));
+
+      // reset form with promotion details
+      try {
+        reset({
+          promotionName: promo.name || "",
+          status: promo.status ? (String(promo.status).charAt(0).toUpperCase() + String(promo.status).slice(1)) : "",
+          fromDate: promo.startDate ? promo.startDate.split("T")[0] : "",
+          toDate: promo.endDate ? promo.endDate.split("T")[0] : "",
+          items,
+        });
+      } catch (e) {
+        // ignore
+      }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="p-4 font-sans max-w-full mx-auto">
@@ -118,147 +224,100 @@ function EditPromotionalDetails() {
                 />
               </div>
             </div>
-            <div className="flex justify-end mt-4">
-              <button
-                type="button"
-                className="bg-[#F04E24] hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:ring-offset-2 flex items-center gap-1"
-              >
-                <Plus size={16} /> Add New
-              </button>
-            </div>
+
           </div>
 
           {/* Divider */}
           <hr className="border-[#F04E24] mb-8" />
 
-          {/* Product and Agent Group Section */}
+          {/* Product and Agent Group Section (dynamic rows) */}
           <div className="mb-8">
-            {/* No title in image for this section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Name */}
-              <div>
-                <label
-                  htmlFor="product-name"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Product Name
-                </label>
-                <div className="relative">
-                  <select
-                    id="product-name"
-                    {...register("productName", { required: true })}
-                    defaultValue="10尺满地黄金 | 10B KAKI EMAS"
-                    className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
-                  >
-                    <option value="">Select Product</option>
-                    <option value="10尺满地黄金 | 10B KAKI EMAS">
-                      10尺满地黄金 | 10B KAKI EMAS
-                    </option>
-                    <option value="product2">Product 2</option>
-                  </select>
-                  <ChevronDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <div key={field.id} className="border border-rose-100 rounded-md p-4 bg-rose-50">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#F04E24] mb-2">Product</label>
+                      <div className="relative">
+                        <select
+                          {...register(`items.${index}.productId`, { required: true })}
+                          className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] appearance-none"
+                        >
+                          <option value="">Select Product</option>
+                          {products && products.length ? (
+                            products.map((p) => (
+                              <option key={p.productId || p.id} value={p.productId || p.id}>{p.name}</option>
+                            ))
+                          ) : (
+                            <>
+                              <option value="10尺满地黄金 | 10B KAKI EMAS">10尺满地黄金 | 10B KAKI EMAS</option>
+                              <option value="product2">Product 2</option>
+                            </>
+                          )}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#F04E24] mb-2">Agent Group</label>
+                      <div className="relative">
+                        <select
+                          {...register(`items.${index}.agentGroupId`, { required: true })}
+                          className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] appearance-none"
+                        >
+                          <option value="">Select Agent Group</option>
+                          {agentGroups && agentGroups.length ? (
+                            agentGroups.map((g) => (
+                              <option key={g.agentGroupId ?? g.id} value={g.agentGroupId ?? g.id}>{g.name}</option>
+                            ))
+                          ) : (
+                            <>
+                              <option value="1">Group A</option>
+                              <option value="2">Group B</option>
+                            </>
+                          )}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-sm font-medium text-[#F04E24] mb-2">Min Qty</label>
+                        <input {...register(`items.${index}.minQuantity`, { required: true })} type="number" className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#F04E24] mb-2">Max Qty</label>
+                        <input {...register(`items.${index}.maxQuantity`, { required: true })} type="number" className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div>
+                      <label className="block text-sm font-medium text-[#F04E24] mb-2">Operation</label>
+                      <select {...register(`items.${index}.operation`, { required: true })} className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md appearance-none">
+                        <option value="">Select</option>
+                        <option value="fixed">Fixed Price Promotion</option>
+                        <option value="percentage">Percent Promotion</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#F04E24] mb-2">Value</label>
+                      <input {...register(`items.${index}.value`, { required: true })} type="number" step="0.01" className="w-full px-3 py-2 bg-white text-gray-800 border border-rose-100 rounded-md" />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button type="button" onClick={() => remove(index)} className="text-sm text-red-600">Remove</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {/* Agent Group */}
-              <div>
-                <label
-                  htmlFor="agent-group"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Agent Group
-                </label>
-                <div className="relative">
-                  <select
-                    id="agent-group"
-                    {...register("agentGroup", { required: true })}
-                    defaultValue="Agent Group A"
-                    className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
-                  >
-                    <option value="">Select Agent Group</option>
-                    <option value="Agent Group A">Agent Group A</option>
-                    <option value="Agent Group B">Agent Group B</option>
-                  </select>
-                  <ChevronDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
-                </div>
-              </div>
-              {/* Minimum Quantity */}
-              <div>
-                <label
-                  htmlFor="min-quantity"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Minimum Quantity
-                </label>
-                <input
-                  id="min-quantity"
-                  type="number"
-                  {...register("minQuantity", { required: true })}
-                  defaultValue="1"
-                  className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
-                />
-              </div>
-              {/* Maximum Quantity */}
-              <div>
-                <label
-                  htmlFor="max-quantity"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Maximum Quantity
-                </label>
-                <input
-                  id="max-quantity"
-                  type="number"
-                  {...register("maxQuantity", { required: true })}
-                  defaultValue="5"
-                  className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
-                />
-              </div>
-              {/* Operation */}
-              <div>
-                <label
-                  htmlFor="operation"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Operation
-                </label>
-                <div className="relative">
-                  <select
-                    id="operation"
-                    {...register("operation", { required: true })}
-                    defaultValue="fixed"
-                    className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent appearance-none"
-                  >
-                    <option value="">Select Operation</option>
-                    <option value="fixed">Fixed Price Promotion</option>
-                    <option value="percent">Percent Promotion</option>
-                  </select>
-                  <ChevronDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
-                </div>
-              </div>
-              {/* Value */}
-              <div>
-                <label
-                  htmlFor="value"
-                  className="block text-sm font-medium text-[#F04E24] mb-2"
-                >
-                  Value
-                </label>
-                <input
-                  id="value"
-                  type="number"
-                  step="0.01"
-                  {...register("value", { required: true })}
-                  className="w-full px-3 py-2 bg-rose-50 dark:bg-rose-50 text-gray-800 dark:text-gray-800 border border-rose-100 dark:border-rose-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F04E24] focus:border-transparent"
-                />
+              ))}
+
+              <div className="flex gap-2">
+                <button type="button" onClick={() => append({ productId: "", agentGroupId: "", minQuantity: "", maxQuantity: "", operation: "", value: "" })} className="bg-[#F04E24] text-white px-3 py-1 rounded">Add New</button>
               </div>
             </div>
           </div>

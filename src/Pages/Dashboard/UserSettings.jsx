@@ -12,10 +12,14 @@ function UserSettings() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
+    // fetch users once on mount. fetchUsers comes from context and is not memoized
+    // (it would change reference on provider re-renders) which can cause
+    // repeated effects. Call it on mount and avoid listing it in deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const fetchData = async () => {
       const res = await fetchUsers();
       if (res.status === 200 && Array.isArray(res.data)) {
-        const validUsers = res.data.filter(u => !u.isDeleted);
+        const validUsers = res.data.filter((u) => !u.isDeleted);
         setUsers(validUsers);
         setFilteredUsers(validUsers);
       } else {
@@ -24,7 +28,7 @@ function UserSettings() {
       }
     };
     fetchData();
-  }, [fetchUsers]);
+  }, []);
 
   // Get unique usernames and names for dropdowns
   const usernames = Array.from(new Set(users.map(u => u.username)));
@@ -133,7 +137,7 @@ function UserSettings() {
                 <td className="px-4 py-2">{user.contactNumber}</td>
                 <td className="px-4 py-2">{user.userGroup}</td>
                 <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                  <Link to="/dashboard/settings/users/edit_user">View</Link>
+                  <Link to={`/dashboard/settings/users/edit_user/${user.userId}`}>View</Link>
                 </td>
               </tr>
             ))}

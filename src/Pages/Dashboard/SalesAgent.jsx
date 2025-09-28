@@ -1,20 +1,69 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { SalesContext } from "../../ContextAPI/SalesContext";
+import { SalesAgentGroupContext } from "../../ContextAPI/SalesAgentGroupContext";
 
 function SalesAgent() {
-  const { register, handleSubmit } = useForm();
-  const { agents, total, page, perPage, loading, fetchAgents, applyFilters, setPage, setPerPage, uniqueAgentNames, uniqueAgentCodes } = useContext(SalesContext);
+  const { register, handleSubmit, reset } = useForm();
+  const { agents, total, page, perPage, loading, fetchAgents, applyFilters, setPage, setPerPage, uniqueAgentNames, uniqueAgentCodes, filters } = useContext(SalesContext);
+  const { fetchAgentGroups } = useContext(SalesAgentGroupContext);
+  const [agentGroups, setAgentGroups] = useState([]);
+  const [displayAgents, setDisplayAgents] = useState([]);
 
-  const onSubmit = (data) => {
-    applyFilters({ username: data.username || "", agentCode: data.agentCode || "", agentGroup: data.agentGroup || "" });
+  const onSubmit = async (data) => {
+    // immediate client-side filter so table updates right away
+    try {
+      const filtered = (agents || []).filter((a) => {
+        const matchName = data.username ? (a.companyName || a.name || "").toString() === data.username.toString() : true;
+        const matchCode = data.agentCode ? (a.code || "").toString() === data.agentCode.toString() : true;
+        const matchGroup = data.agentGroup ? ((a.agentGroupId || a.agentGroup || a.groupId || "").toString() === data.agentGroup.toString()) : true;
+        return matchName && matchCode && matchGroup;
+      });
+      setDisplayAgents(filtered);
+    } catch (e) {
+      // ignore
+    }
+
+    await applyFilters({ username: data.username || "", agentCode: data.agentCode || "", agentGroup: data.agentGroup || "" });
+    // keep form in sync
+    reset({ username: data.username || "", agentCode: data.agentCode || "", agentGroup: data.agentGroup || "" });
+  };
+
+  const onClear = async () => {
+    await applyFilters({ username: "", agentCode: "", agentGroup: "" });
+    reset({ username: "", agentCode: "", agentGroup: "" });
+    // reset local display
+    setDisplayAgents(agents || []);
   };
 
   useEffect(() => {
+    // initial load of agents and groups
     fetchAgents({ page: 1, perPage });
+    const loadGroups = async () => {
+      const res = await fetchAgentGroups();
+      const data = res.data !== undefined ? res.data : res;
+      setAgentGroups(Array.isArray(data) ? data : []);
+    };
+    loadGroups();
+
+    // initialize form values from current filters
+    reset({
+      username: filters?.username || "",
+      agentCode: filters?.agentCode || "",
+      agentGroup: filters?.agentGroup || "",
+    });
+
+    // initialize display agents
+    setDisplayAgents(agents || []);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // keep local display list in sync with context agents when server updates occur
+  useEffect(() => {
+    setDisplayAgents(agents || []);
+  }, [agents]);
 
   return (
     <div className="p-6 bg-[#FFF3F0] min-h-screen text-[#F24E1E] font-semibold mb-4">
@@ -72,18 +121,35 @@ function SalesAgent() {
               className="w-full p-2 border rounded bg-[#FDE5E0] text-black"
             >
               <option value="">Select Group</option>
-              <option value="Group A">Group A</option>
-              <option value="Group B">Group B</option>
-              <option value="Group C">Group C</option>
+              {agentGroups.length ? (
+                agentGroups.map((g) => (
+                  <option key={g.id ?? g.agentGroupId} value={g.id ?? g.agentGroupId}>{g.name}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Group A">Group A</option>
+                  <option value="Group B">Group B</option>
+                  <option value="Group C">Group C</option>
+                </>
+              )}
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="bg-[#F24E1E] text-white px-4 py-2 rounded h-fit"
-          >
-            Search
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="bg-[#F24E1E] text-white px-4 py-2 rounded h-fit"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={onClear}
+              className="bg-white text-[#F24E1E] border border-[#F24E1E] px-4 py-2 rounded h-fit"
+            >
+              Clear
+            </button>
+          </div>
         </form>
       </div>
 
@@ -116,17 +182,17 @@ function SalesAgent() {
                   Loading...
                 </td>
               </tr>
-            ) : agents && agents.length ? (
-              agents.map((agent) => (
-                <tr key={agent.agentId} className="border-b">
+            ) : displayAgents && displayAgents.length ? (
+              displayAgents.map((agent) => (
+                <tr key={agent.agentId || agent.id} className="border-b">
                   <td className="px-4 py-2">{agent.code}</td>
-                  <td className="px-4 py-2">{agent.companyName}</td>
-                  <td className="px-4 py-2">{agent.agentGroupId ? `Group ${agent.agentGroupId}` : "-"}</td>
+                  <td className="px-4 py-2">{agent.companyName || agent.name}</td>
+                  <td className="px-4 py-2">{(agentGroups.find(g => (g.id ?? g.agentGroupId) === agent.agentGroupId)?.name) || (agent.agentGroupId ? `Group ${agent.agentGroupId}` : "-")}</td>
                   <td className="px-4 py-2">{agent.creditTerm || "-"}</td>
                   <td className="px-4 py-2">{agent.creditLimit || "-"}</td>
                   {/* <td className="px-4 py-2">-</td> */}
                   <td className="px-4 py-2 text-blue-500 underline cursor-pointer">
-                    <Link to="/dashboard/master_data/sales_agent/edit_sales_agent">View</Link>
+                    <Link to={`/dashboard/master_data/sales_agent/edit_sales_agent/${agent.id || agent.agentId}`}>View</Link>
                   </td>
                 </tr>
               ))

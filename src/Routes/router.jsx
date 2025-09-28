@@ -103,12 +103,13 @@ export const router = createBrowserRouter([
         ],
       },
       {
-            path: "/dashboard/settings/users/add_new_user",
-            element: <AddNewUser />
-      },
-      {     path: "/dashboard/settings/users/edit_user",
+            path: "/dashboard/settings/users/edit_user/:id?",
             element: <EditUser />, 
       },
+      {
+    path: "/dashboard/settings/users/add_new_user",
+    element: <AddNewUser />
+  },
       {
         path: "master_data",
         children: [
@@ -125,7 +126,7 @@ export const router = createBrowserRouter([
         element: <AddNewSalesAgent />,
       },
       {
-        path: "/dashboard/master_data/sales_agent/edit_sales_agent",
+        path: "/dashboard/master_data/sales_agent/edit_sales_agent/:id",
         element: <EditSalesAgent />,
       },
       {

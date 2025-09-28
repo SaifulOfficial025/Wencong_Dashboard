@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import home_icon from "../../../public/icon_home.png";
 import { BsThreeDots } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import { Outlet } from "react-router-dom";
+import { OrderContext } from "../../ContextAPI/OrderContext";
 
 export default function OrderTable() {
   const [activeTab, setActiveTab] = useState("All");
@@ -19,70 +20,16 @@ export default function OrderTable() {
     "Return",
   ];
 
-  const orders = [
-    {
-      id: "SO-000022",
-      date: "1/3/2022 2:00pm",
-      status: "Pending",
-      customer: "Jessie L.",
-      image:
-        "https://cdn.iconscout.com/icon/free/png-256/free-dhl-express-logo-icon-download-in-svg-png-gif-file-formats--industry-company-brand-pack-logos-icons-2875356.png",
-      address: "1951 Tom Mountain Ave, Johor, MY 91762",
-      phone: "+60123 1234567",
-      items: "17 Items",
-      itemDetails:
-        "168红茶 | 小包装(1.8-8.0g) - 1st Kaki Red & Rose, 108 KAKI EMAS",
-      remark: "(2 day delivery) Don't deliver on weekends",
-      shipment: "DHL Standard MYR27.7",
-      actions: ["View", "Edit", "Change Status", "Print"],
-    },
-    {
-      id: "SO-000023",
-      date: "2/5/2022 1:00pm",
-      status: "Return",
-      image:
-        "https://cdn.haitrieu.com/wp-content/uploads/2022/05/Logo-Lalamove-V.png",
-      customer: "Emily W.",
-      address: "1951 Tom Mountain Ave, Johor, MY 91762",
-      phone: "+60123 1234567",
-      items: "10 Items",
-      itemDetails:
-        "10pcs红茶 | 小包装(1.8-8.0g) - 1st Kaki Red & Rose, 108 KAKI EMAS",
-      remark: "(2 day delivery) Don't deliver on weekends",
-      shipment: "Lalamove MYR10.5",
-      actions: ["View"],
-    },
-    {
-      id: "SO-000024",
-      date: "3/7/2022 3:30pm",
-      status: "Awaiting Shipment",
-      image:
-        "https://cdn.iconscout.com/icon/free/png-256/free-dhl-express-logo-icon-download-in-svg-png-gif-file-formats--industry-company-brand-pack-logos-icons-2875356.png",
-      customer: "Michael B.",
-      address: "1234 Elm St, Johor, MY 91762",
-      phone: "+60123 7654321",
-      items: "20 Items",
-      itemDetails: "50pcs Kaki Red & Rose, 50pcs Green Tea | KAKI EMAS",
-      remark: "(Same day delivery) Deliver on weekends",
-      shipment: "DHL Express MYR35.0",
-      actions: ["View", "Change Status", "Print"],
-    },
-    {
-      id: "SO-000025",
-      date: "5/5/2022 5:00pm",
-      status: "Completed",
-      image:
-        "https://cdn.iconscout.com/icon/free/png-256/free-dhl-express-logo-icon-download-in-svg-png-gif-file-formats--industry-company-brand-pack-logos-icons-2875356.png",
-      customer: "Sarah T.",
-      address: "5678 Oak St, Johor, MY 91762",
-      phone: "+60123 4567890",
-      items: "8 Items",
-      itemDetails: "168 Kaki Red & Rose, 108 KAKI EMAS",
-      remark: "(3 day delivery) No weekend delivery",
-      shipment: "DHL Standard MYR27.7",
-      actions: ["View", "Change Status", "Print"],
-    },
-  ];
+  const { orders: fetchedOrders, fetchOrders, loading } = useContext(OrderContext);
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    // initial load
+    fetchOrders().then((res) => {
+      if (res && res.data) setOrders(res.data || []);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectAll = (checked) => {
     if (checked) {
@@ -118,7 +65,40 @@ export default function OrderTable() {
     }
   };
 
-  const filteredOrders = orders.filter(
+  const normalizeStatus = (s) => {
+    if (!s) return "";
+    const str = String(s);
+    // map common backend values to UI labels
+    if (/awaiting/i.test(str)) return "Awaiting Shipment";
+    if (/pending/i.test(str)) return "Pending";
+    if (/cancel/i.test(str)) return "Cancelled";
+    if (/complete/i.test(str)) return "Completed";
+    if (/return/i.test(str)) return "Return";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  const mappedOrders = (orders || []).map((o) => {
+    const itemCount = Array.isArray(o.orderItems) ? o.orderItems.length : 0;
+    const itemDetails = Array.isArray(o.orderItems) && o.orderItems.length > 0
+      ? o.orderItems.map((it) => `${it.productCode} x${it.productQty}`).join(", ")
+      : "";
+    return {
+      raw: o,
+      id: o.orderNumber || o.soNumber || o.orderId,
+      date: o.date ? new Date(o.date).toLocaleString() : "",
+      status: normalizeStatus(o.status),
+      customer: o.agentId || o.partnerId || "",
+      image: home_icon,
+      address: o.address || "",
+      phone: "",
+      items: `${itemCount} Items`,
+      itemDetails,
+      remark: o.remark || "",
+      shipment: `${o.courier || ""} ${o.shippingPrice ? "MYR" + Number(o.shippingPrice) : ""}`.trim(),
+    };
+  });
+
+  const filteredOrders = mappedOrders.filter(
     (order) =>
       (activeTab === "All" || order.status === activeTab) &&
       (statusFilter === "" || order.status === statusFilter)
