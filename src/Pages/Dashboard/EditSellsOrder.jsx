@@ -7,11 +7,10 @@ import { OrderContext } from "../../ContextAPI/OrderContext";
 import { PromotionContext } from "../../ContextAPI/PromotionContext";
 import { SalesContext } from "../../ContextAPI/SalesContext";
 import { ProductContext } from "../../ContextAPI/ProductContext";
+import { BASE_URL } from "../../config";
 
-const AddSellsOrder = () => {
+const EditSellsOrder = () => {
 	const { id } = useParams();
-	// empty string => user hasn't selected a promotion (show suggested available);
-	// "0" => user explicitly selected "No Promotion" (apply zero)
 	const [selectedPromotion, setSelectedPromotion] = useState("");
 	const [totals, setTotals] = useState({
 		totalQty: 0,
@@ -24,28 +23,18 @@ const AddSellsOrder = () => {
 
 	const { register, control, handleSubmit, watch, setValue } = useForm({
 		defaultValues: {
-			salesOrderNo: "SO-000032",
+			salesOrderNo: "",
 			date: "",
 			agentName: "",
 			businessPartner: "",
-			contactPerson: "Mr. Lim",
-			contactPhone: "+6012345678",
-			contactAddress:
-				"No 1, Jalan TK 5/44, Kinrara Industrial Park,\nJalan Puchong,\n47100 Puchong,\nSelangor, Malaysia.",
-			creditTerm: "30 Days",
-			creditLimit: "600",
+			contactPerson: "",
+			contactPhone: "",
+			contactAddress: "",
+			creditTerm: "",
+			creditLimit: "",
 			remark: "",
-			items: [
-				{
-					no: 1,
-					productCode: "",
-					description: "",
-					qty: "",
-					uom: "",
-					unitPrice: "",
-					price: "",
-				},
-			],
+			status: "pending",
+			items: [],
 			promotion: "0",
 			gstRate: 6,
 		},
@@ -58,12 +47,64 @@ const AddSellsOrder = () => {
 
 	const watchedItems = watch("items");
 
-	// domain data state (promotions/products/agents) must be declared before effects that use them
 	const [promotions, setPromotions] = useState([]);
 	const [agents, setAgents] = useState([]);
 	const [products, setProducts] = useState([]);
 
-	// Update totals whenever items, promotions or selected promotion changes
+	// Fetch order data on mount
+	useEffect(() => {
+		const fetchOrder = async () => {
+			try {
+				const res = await fetch(`${BASE_URL}/api/order/${id}`, {
+					headers: { Accept: "application/json" },
+				});
+				const json = await res.json();
+				const order = json.data;
+				if (order) {
+					setValue("salesOrderNo", order.soNumber || "");
+					setValue(
+						"date",
+						order.date
+							? new Date(order.date).toISOString().split("T")[0]
+							: ""
+					);
+					setValue("agentName", order.agentId || "");
+					setValue("businessPartner", order.partnerId || "");
+					setValue("contactPerson", order.contactPerson || "");
+					setValue("contactPhone", order.contactPhone || "");
+					setValue("contactAddress", order.address || "");
+					setValue("creditTerm", order.creditTerm || "");
+					setValue("creditLimit", order.creditLimit || "");
+					setValue("remark", order.remark || "");
+					setValue("status", order.status || "pending");
+					setValue("promotion", String(order.promotionId || "0"));
+					setSelectedPromotion(String(order.promotionId || "0"));
+
+					const items = (order.orderItems || []).map(
+						(item, index) => ({
+							no: index + 1,
+							productId: String(item.productId),
+							productCode: item.productCode || "",
+							description: item.productDescription || "",
+							qty: item.productQty || "",
+							uom: item.productUom || "",
+							unitPrice: Number(
+								item.productUnitPrice || 0
+							).toFixed(2),
+							price: Number(item.productTotal || 0).toFixed(2),
+						})
+					);
+					setValue("items", items);
+				}
+			} catch (err) {
+				window.alert("Error fetching order: " + (err.message || err));
+			}
+		};
+		fetchOrder();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id, setValue]);
+
+	// Update totals
 	useEffect(() => {
 		const subtotal = watchedItems.reduce((sum, item) => {
 			const price = parseFloat(item.price) || 0;
@@ -75,21 +116,13 @@ const AddSellsOrder = () => {
 			return sum + qty;
 		}, 0);
 
-		// Compute promotion discounts:
-		// - promotionSuggested: what promotions (any) would give as discounts
-		// - promotionApplied: discount from the explicitly selected promotion (if any)
 		let promotionSuggested = 0;
 		let promotionApplied = 0;
 		const applyPromoProductsToItems = (promoProducts, accumulateTo) => {
 			promoProducts.forEach((pp) => {
 				const val = parseFloat(pp.value) || 0;
-				// match items by productId
 				const matchedItems = (watchedItems || []).filter((it) => {
-					// item.productId may be under different keys depending on how it's set
-					const itemPid =
-						it.productId || it.productId === 0
-							? it.productId
-							: it.productId;
+					const itemPid = it.productId;
 					return String(itemPid) === String(pp.productId);
 				});
 				matchedItems.forEach((mi) => {
@@ -100,21 +133,18 @@ const AddSellsOrder = () => {
 						pp.maximumQuantity !== null
 							? Number(pp.maximumQuantity)
 							: Infinity;
-					if (qty < minQ || qty > maxQ) return; // quantity outside promotion range
+					if (qty < minQ || qty > maxQ) return;
 					const itemTotal =
 						Number(mi.price) || qty * (Number(mi.unitPrice) || 0);
 					if (pp.operationType === "percentage") {
 						accumulateTo.value += itemTotal * (val / 100);
 					} else {
-						// fixed amount; apply per matching item occurrence
 						accumulateTo.value += val;
 					}
 				});
 			});
 		};
 
-		// compute suggested discount across all promotions using subtotal
-		// For clarity we compute per-promotion value and take the max (best promotion suggestion)
 		const perPromoValues = (promotions || []).map((promo) => {
 			if (!promo || !Array.isArray(promo.promotionProducts)) return 0;
 			let acc = 0;
@@ -130,7 +160,6 @@ const AddSellsOrder = () => {
 			? Math.max(...perPromoValues)
 			: 0;
 
-		// compute applied discount only when a promotion is selected (apply to subtotal)
 		if (selectedPromotion && selectedPromotion !== "0") {
 			const promo = (promotions || []).find(
 				(p) => String(p.promotionId) === String(selectedPromotion)
@@ -160,19 +189,16 @@ const AddSellsOrder = () => {
 			total,
 		});
 
-		// Keep promotion field as the selected promotion id for payload
 		setValue("promotion", selectedPromotion);
 	}, [watchedItems, selectedPromotion, promotions, setValue]);
 
-	const { createOrder } = useContext(OrderContext);
+	const { updateOrder } = useContext(OrderContext);
 	const navigate = useNavigate();
 	const { fetchPromotions } = useContext(PromotionContext);
 	const { fetchAgents } = useContext(SalesContext);
 	const { fetchProducts } = useContext(ProductContext);
 
-	// load promotions, agents and products on mount
 	useEffect(() => {
-		// load promotions for the promotion select
 		fetchPromotions()
 			.then((res) => {
 				if (Array.isArray(res)) setPromotions(res);
@@ -181,7 +207,6 @@ const AddSellsOrder = () => {
 			})
 			.catch(() => {});
 
-		// load agents
 		fetchAgents({ page: 1, perPage: 1000 })
 			.then((res) => {
 				if (res && Array.isArray(res.data)) setAgents(res.data);
@@ -189,7 +214,6 @@ const AddSellsOrder = () => {
 			})
 			.catch(() => {});
 
-		// load products
 		fetchProducts({ page: 1, perPage: 1000 })
 			.then((res) => {
 				if (res && Array.isArray(res.data)) setProducts(res.data);
@@ -199,13 +223,12 @@ const AddSellsOrder = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// When agent changes, fetch agent detail to prefill credit fields
 	const watchedAgent = watch("agentName");
 	useEffect(() => {
 		if (!watchedAgent) return;
 		const fetchAgentDetail = async (id) => {
 			try {
-				const res = await fetch(`/api/agents/${id}`, {
+				const res = await fetch(`${BASE_URL}/api/agents/${id}`, {
 					headers: { Accept: "application/json" },
 				});
 				const json = await res.json();
@@ -229,7 +252,6 @@ const AddSellsOrder = () => {
 	}, [watchedAgent]);
 
 	const onSubmit = async (data) => {
-		// Build payload according to API spec
 		const payload = {
 			orderNumber: data.salesOrderNo || `ORD-${Date.now()}`,
 			agentId: data.agentName || "",
@@ -240,9 +262,6 @@ const AddSellsOrder = () => {
 				? new Date(data.date).toISOString()
 				: new Date().toISOString(),
 			address: data.contactAddress || "",
-			// addressPostalCode: "",
-			// addressCity: "",
-			// addressState: "",
 			status: data.status || "pending",
 			remark: data.remark || "",
 			subTotal: Number(totals.subtotal) || 0,
@@ -275,24 +294,30 @@ const AddSellsOrder = () => {
 				productTotal: Number(it.price) || 0,
 				isDeleted: 0,
 				isReturn: 0,
-				orderId: 0,
+				orderId: Number(id),
 			})),
 		};
 
 		try {
-			const res = await createOrder(payload);
+			const res = await fetch(`${BASE_URL}/api/order/${id}`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
 			if (res.status >= 200 && res.status < 300) {
-				// success - navigate to sales order list
-				window.alert("Order created successfully");
+				window.alert("Order updated successfully");
 				navigate("/dashboard/sales_order");
 			} else {
 				window.alert(
-					"Failed to create order: " +
+					"Failed to update order: " +
 						(res.data?.message || JSON.stringify(res.data))
 				);
 			}
 		} catch (err) {
-			window.alert("Error creating order: " + (err.message || err));
+			window.alert("Error updating order: " + (err.message || err));
 		}
 	};
 
@@ -311,45 +336,26 @@ const AddSellsOrder = () => {
 	return (
 		<section>
 			<div className="capitalize">
-				{/* Header Section */}
 				<div className="py-3 bg-[#F04E24] dark:bg-[#F04E24] ps-5">
-					<div>
-						{id ? (
-							<>
-								<div className="w-full flex items-center justify-between pe-5">
-									<div className="flex items-center gap-5">
-										<span className="text-[#010101] dark:text-[#010101] font-medium">
-											Approval Sales Order
-										</span>
-										<span className="bg-[#FFE3B8] dark:bg-[#FFE3B8] rounded-sm py-[2px] px-[16px] cursor-pointer font-medium hover:bg-[#e9ba73] dark:hover:bg-[#e9ba73]">
-											Pending
-										</span>
-									</div>
-									<div className="flex items-center gap-2 font-medium cursor-pointer text-white dark:text-white">
-										<MdPrint
-											size={24}
-											className="bg-[#F04E24] dark:bg-[#F04E24]"
-										/>
-										Print
-									</div>
-								</div>
-							</>
-						) : (
-							<>
-								<div className="flex items-center gap-5">
-									<span className="text-[#010101] dark:text-[#010101] font-medium">
-										Add new sales order
-									</span>
-									<span className="bg-[#FFE3B8] text-[#010101] rounded-sm py-[2px] px-[16px] cursor-pointer font-medium hover:bg-[#e9ba73] dark:bg-[#FFE3B8] dark:text-[#010101] dark:hover:bg-[#e9ba73]">
-										New Order
-									</span>
-								</div>
-							</>
-						)}
+					<div className="w-full flex items-center justify-between pe-5">
+						<div className="flex items-center gap-5">
+							<span className="text-[#010101] dark:text-[#010101] font-medium">
+								Edit Sales Order
+							</span>
+							<span className="bg-[#FFE3B8] dark:bg-[#FFE3B8] rounded-sm py-[2px] px-[16px] cursor-pointer font-medium hover:bg-[#e9ba73] dark:hover:bg-[#e9ba73]">
+								Order #{id}
+							</span>
+						</div>
+						<div className="flex items-center gap-2 font-medium cursor-pointer text-white dark:text-white">
+							<MdPrint
+								size={24}
+								className="bg-[#F04E24] dark:bg-[#F04E24]"
+							/>
+							Print
+						</div>
 					</div>
 				</div>
 
-				{/* Action Buttons (Reject/Approve) */}
 				<div className="bg-white dark:bg-white flex items-center gap-5 pt-10 justify-end pe-5">
 					<span className="bg-[#FF9900] dark:bg-[#FF9900] rounded-sm py-[4px] px-[20px] cursor-pointer hover:bg-[#d1902f] dark:hover:bg-[#d1902f] text-white dark:text-white">
 						Reject
@@ -359,10 +365,8 @@ const AddSellsOrder = () => {
 					</span>
 				</div>
 
-				{/* Form Section */}
 				<div className="bg-white dark:bg-white pt-10 p-8">
 					<form onSubmit={handleSubmit(onSubmit)}>
-						{/* Header Section (Form Fields) */}
 						<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 							<div>
 								<label className="block text-sm font-medium text-[#DE472D] dark:text-[#DE472D] mb-1">
@@ -446,7 +450,6 @@ const AddSellsOrder = () => {
 							</div>
 						</div>
 
-						{/* Contact Information Section */}
 						<div className="flex gap-6 mb-6">
 							<div className="bg-gray-100 dark:bg-gray-100 p-4 rounded-lg basis-6/12">
 								<h3 className="text-sm font-medium text-[#DE472D] dark:text-[#DE472D] mb-3">
@@ -484,7 +487,6 @@ const AddSellsOrder = () => {
 											placeholder="Credit Term"
 										/>
 									</div>
-
 									<div className="w-full">
 										<label className="text-[#DE472D] dark:text-[#DE472D] text-sm font-medium">
 											Credit Limit
@@ -509,7 +511,6 @@ const AddSellsOrder = () => {
 									></textarea>
 								</div>
 
-								{/* Status dropdown (matches screenshot style) */}
 								<div className="mt-6">
 									<label className="block text-sm font-medium text-[#DE472D] mb-2">
 										Status
@@ -543,32 +544,7 @@ const AddSellsOrder = () => {
 								</div>
 							</div>
 						</div>
-						{/* <div className="mt-6 mb-6">
-							<label className="block text-sm font-medium text-[#DE472D] mb-2">
-								Shipment
-							</label>
-							<div className="relative">
-								<select
-									{...register("status")}
-									className="w-full px-4 py-3 bg-rose-50 border border-rose-100 rounded-md text-gray-800 appearance-none"
-								>
-									<option value="" selected>
-										Choose Shipment
-									</option>
-									<option value="fedex">Fedex</option>
-									<option value="air">Air</option>
-								</select>
-								<svg
-									className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-								>
-									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
-								</svg>
-							</div>
-						</div> */}
 
-						{/* Items Table */}
 						<div className="mb-6">
 							<div className="flex justify-between items-center mb-4">
 								<h3 className="text-lg font-medium text-gray-800 dark:text-gray-800">
@@ -850,7 +826,6 @@ const AddSellsOrder = () => {
 							</div>
 						</div>
 
-						{/* Summary Section */}
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 							<div className="bg-gray-100 dark:bg-gray-100 p-4 rounded-lg">
 								<label className="block text-sm font-medium text-[#DE472D] dark:text-[#DE472D] mb-1">
@@ -910,7 +885,7 @@ const AddSellsOrder = () => {
 										{selectedPromotion &&
 										selectedPromotion !== "0" ? (
 											<>
-												-$
+												$
 												{totals.promotionApplied.toFixed(
 													2
 												)}
@@ -943,13 +918,12 @@ const AddSellsOrder = () => {
 							</div>
 						</div>
 
-						{/* Submit Button */}
 						<div className="flex justify-end">
 							<button
 								type="submit"
 								className="btn bg-[#DE472D] hover:bg-[#c23c23] text-white dark:text-white px-6 py-2 rounded"
 							>
-								Submit
+								Update
 							</button>
 						</div>
 					</form>
@@ -959,4 +933,4 @@ const AddSellsOrder = () => {
 	);
 };
 
-export default AddSellsOrder;
+export default EditSellsOrder;
